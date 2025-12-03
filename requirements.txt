@@ -1,0 +1,17 @@
+# LangChain Core & Integration
+langchain>=0.1.0
+langchain-openai>=0.1.0
+
+# Environment Management
+python-dotenv
+
+# Optional: For better logging/debugging (Optional but recommended)
+langchain-community
+
+# Data Collection & Analysis
+akshare
+pandas
+tabulate
+
+# Optional: Excel support
+openpyxl
