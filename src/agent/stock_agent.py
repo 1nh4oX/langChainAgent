@@ -173,15 +173,8 @@ class StockAnalysisAgent:
             tool_input = tool_call["args"]
             
             if tool_name in self.tool_map:
-                if verbose:
-                    print(f"\n[Tool Execution] Invoking: {tool_name}")
-                    print(f"  Args: {tool_input}")
-                
                 try:
                     tool_output = self.tool_map[tool_name].invoke(tool_input)
-                    
-                    if verbose:
-                        print(f"  Result size: {len(str(tool_output))} chars")
                     
                     tool_messages.append(
                         ToolMessage(
@@ -191,8 +184,6 @@ class StockAnalysisAgent:
                     )
                 except Exception as e:
                     error_msg = f"Tool execution failed: {str(e)}"
-                    if verbose:
-                        print(f"  Error: {error_msg}")
                     tool_messages.append(
                         ToolMessage(
                             content=error_msg,
@@ -251,5 +242,6 @@ if __name__ == "__main__":
     print("="*60)
     print(result["output"])
     print(f"\n总迭代次数: {result['iterations']}")
+
 
 

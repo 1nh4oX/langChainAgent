@@ -69,13 +69,19 @@ model=Qwen/Qwen2.5-7B-Instruct
 ### 3. 运行程序
 
 ```bash
-# 交互式运行
+# 方式1: Web UI - 英文版（推荐，零编码问题）⭐
+streamlit run ui/streamlit_app.py
+
+# 方式1b: Web UI - 中文版（如果需要中文界面）
+streamlit run ui/streamlit_app_cn.py
+
+# 方式2: 命令行交互
 python app.py
 
-# 采集新闻数据
+# 方式3: 采集新闻数据
 python scripts/collect_news.py
 
-# 运行示例
+# 方式4: 运行示例
 python examples/basic_usage.py
 ```
 
@@ -160,14 +166,41 @@ pytest tests/
 pytest tests/test_agent.py
 ```
 
-## 🎨 UI 界面（规划中）
+## 🎨 Web UI 界面
 
-我们计划开发以下界面：
+### 现代化 Streamlit UI ✨
 
-- [ ] **Streamlit Web UI** - 交互式 Web 界面
-- [ ] **Gradio UI** - 快速原型界面
-- [ ] **Flask API** - RESTful API 服务
+我们提供了一个美观的 Web 界面，设计灵感来自 Kaggle、X (Twitter)、Threads：
+
+**特点：**
+- 🎨 现代卡片式设计，紫色渐变主题
+- 📱 响应式布局，完美适配各种屏幕
+- ⚡ 流畅动画，优雅的交互体验
+- 📊 实时指标展示，历史记录管理
+- ⚙️ 灵活配置，支持参数调整
+
+**启动方式：**
+
+```bash
+# 本地运行
+streamlit run ui/streamlit_app.py
+
+# 或使用启动脚本
+./run_ui.sh
+```
+
+**访问地址：** http://localhost:8501
+
+**在线部署：** 查看 [DEPLOY_STREAMLIT_CLOUD.md](DEPLOY_STREAMLIT_CLOUD.md) 一键部署到 Streamlit Cloud 获得公开访问链接
+
+详见 [ui/README.md](ui/README.md) 了解更多
+
+### 未来规划
+
+- [ ] **暗色主题** - 支持主题切换
 - [ ] **数据可视化** - K线图、指标图表
+- [ ] **Flask API** - RESTful API 服务
+- [ ] **导出功能** - PDF/Word 报告导出
 
 ## 🤝 贡献指南
 

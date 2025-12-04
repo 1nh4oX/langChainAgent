@@ -15,3 +15,6 @@ tabulate
 
 # Optional: Excel support
 openpyxl
+
+# Web UI
+streamlit>=1.28.0

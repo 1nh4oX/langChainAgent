@@ -20,7 +20,7 @@ def save_to_csv(data: pd.DataFrame, filepath: str, encoding: str = 'utf-8-sig') 
     """
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     data.to_csv(filepath, index=False, encoding=encoding)
-    print(f"✅ CSV 文件已保存: {filepath}")
+    # print(f"✅ CSV 文件已保存: {filepath}")
 
 
 def save_to_json(data: Any, filepath: str, indent: int = 2) -> None:
@@ -40,7 +40,7 @@ def save_to_json(data: Any, filepath: str, indent: int = 2) -> None:
         else:
             json.dump(data, f, ensure_ascii=False, indent=indent)
     
-    print(f"✅ JSON 文件已保存: {filepath}")
+    # print(f"✅ JSON 文件已保存: {filepath}")
 
 
 def load_from_json(filepath: str) -> Any:
@@ -55,5 +55,6 @@ def load_from_json(filepath: str) -> Any:
     """
     with open(filepath, 'r', encoding='utf-8') as f:
         return json.load(f)
+
 
 

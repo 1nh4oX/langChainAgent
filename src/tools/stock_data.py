@@ -51,7 +51,7 @@ def get_stock_history(symbol: str) -> str:
     Example:
         >>> result = get_stock_history.invoke({"symbol": "600519"})
     """
-    print(f"\n[工具调用] 正在从 AkShare 获取 {symbol} 的数据...")
+    # print(f"\n[工具调用] 正在从 AkShare 获取 {symbol} 的数据...")
     
     try:
         # 设定开始时间为 1 个月前
@@ -103,7 +103,7 @@ def get_stock_news(symbol: str, max_news: int = 10) -> str:
     Example:
         >>> result = get_stock_news.invoke({"symbol": "600519", "max_news": 5})
     """
-    print(f"\n[工具调用] 正在获取 {symbol} 的新闻资讯...")
+    # print(f"\n[工具调用] 正在获取 {symbol} 的新闻资讯...")
     
     try:
         # 使用 AkShare 获取个股新闻
@@ -141,7 +141,7 @@ def get_stock_technical_indicators(symbol: str) -> str:
     Example:
         >>> result = get_stock_technical_indicators.invoke({"symbol": "600519"})
     """
-    print(f"\n[工具调用] 正在计算 {symbol} 的技术指标...")
+    # print(f"\n[工具调用] 正在计算 {symbol} 的技术指标...")
     
     try:
         start_date, end_date = get_date_range(60)
@@ -201,7 +201,7 @@ def get_industry_comparison(symbol: str) -> str:
     Example:
         >>> result = get_industry_comparison.invoke({"symbol": "600519"})
     """
-    print(f"\n[工具调用] 正在获取 {symbol} 的行业对比数据...")
+    # print(f"\n[工具调用] 正在获取 {symbol} 的行业对比数据...")
     
     try:
         # 获取股票基本信息
@@ -242,7 +242,7 @@ def analyze_stock_comprehensive(symbol: str) -> str:
     Example:
         >>> result = analyze_stock_comprehensive.invoke({"symbol": "600519"})
     """
-    print(f"\n[工具调用] 正在进行 {symbol} 的综合分析...")
+    # print(f"\n[工具调用] 正在进行 {symbol} 的综合分析...")
     
     results = []
     results.append("=" * 50)
@@ -282,5 +282,6 @@ def analyze_stock_comprehensive(symbol: str) -> str:
 if __name__ == "__main__":
     print("测试股票工具模块...")
     print(get_stock_history.invoke({"symbol": "600519"}))
+
 
 

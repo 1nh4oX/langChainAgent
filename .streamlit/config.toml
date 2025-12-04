@@ -1,0 +1,18 @@
+[theme]
+primaryColor = "#1a1a1a"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#fafafa"
+textColor = "#171717"
+font = "sans serif"
+# 按钮文字会使用 primaryColor 的对比色
+
+[server]
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+
