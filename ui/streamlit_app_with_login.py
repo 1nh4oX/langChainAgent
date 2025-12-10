@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Stock Analysis Agent - Modern UI
-现代化深色主题 UI，基于 Glassmorphism 和渐变设计
+Stock Analysis Agent - With API Configuration
+支持用户自行配置 API，可公开部署
 """
 
 import sys
@@ -38,7 +38,7 @@ from src.tools import (
     analyze_stock_comprehensive
 )
 
-# ==================== 页面配置 ====================
+# 页面配置
 st.set_page_config(
     page_title="AI Stock Analysis",
     page_icon="📊",
@@ -46,639 +46,248 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==================== 现代化 CSS 样式 ====================
+# CSS - 简洁版本
 st.markdown("""
 <style>
-    /* ===== 导入字体 ===== */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    /* 主背景 */
+    .main {background: #fafafa;}
     
-    /* ===== 全局样式 ===== */
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    
-    /* ===== 深色背景 ===== */
-    .stApp {
-        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-    }
-    
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 1200px;
-    }
-    
-    /* ===== 侧边栏 ===== */
+    /* 侧边栏加宽 */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-        border-right: 1px solid rgba(102, 126, 234, 0.2);
-        min-width: 350px !important;
-        max-width: 350px !important;
+        min-width: 380px !important;
+        max-width: 380px !important;
     }
-    
     [data-testid="stSidebar"] > div:first-child {
-        background: transparent;
-        padding: 1.5rem;
+        width: 380px !important;
     }
     
-    /* ===== 增强版毛玻璃效果 ===== */
-    .glass-card {
-        background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.1) 0%,
-            rgba(255, 255, 255, 0.05) 50%,
-            rgba(255, 255, 255, 0.02) 100%
-        );
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 20px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
-            0 4px 30px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-    
-    /* 玻璃高光效果 */
-    .glass-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.1),
-            transparent
-        );
-        transition: left 0.5s ease;
-    }
-    
-    .glass-card:hover::before {
-        left: 100%;
-    }
-    
-    .glass-card:hover {
-        background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.15) 0%,
-            rgba(255, 255, 255, 0.08) 50%,
-            rgba(255, 255, 255, 0.05) 100%
-        );
-        border-color: rgba(102, 126, 234, 0.4);
-        transform: translateY(-4px) scale(1.01);
-        box-shadow: 
-            0 20px 40px rgba(102, 126, 234, 0.2),
-            0 0 0 1px rgba(102, 126, 234, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-    
-    /* 玻璃边框发光 */
-    .glass-card::after {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(
-            45deg,
-            transparent 30%,
-            rgba(102, 126, 234, 0.3) 50%,
-            transparent 70%
-        );
-        border-radius: 22px;
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-    }
-    
-    .glass-card:hover::after {
-        opacity: 1;
-    }
-    
-    /* ===== 英雄区域 ===== */
-    .hero-section {
-        text-align: center;
-        padding: 2rem 0 3rem 0;
-    }
-    
-    .hero-title {
-        font-size: 3rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.02em;
-    }
-    
-    .hero-subtitle {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 1.1rem;
-        font-weight: 400;
-    }
-    
-    /* ===== 输入框 ===== */
-    .stTextArea textarea, .stTextInput input {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-        color: #ffffff !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stTextArea textarea:focus, .stTextInput input:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
-    }
-    
-    .stTextArea textarea::placeholder, .stTextInput input::placeholder {
-        color: rgba(255, 255, 255, 0.4) !important;
-    }
-    
-    /* ===== 按钮 ===== */
-    .stButton > button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.75rem 2rem !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
-    }
-    
-    /* 次要按钮 */
-    .secondary-btn button {
-        background: rgba(255, 255, 255, 0.1) !important;
-        box-shadow: none !important;
-    }
-    
-    .secondary-btn button:hover {
-        background: rgba(255, 255, 255, 0.15) !important;
-        box-shadow: none !important;
-    }
-    
-    /* ===== 示例按钮 - 增强玻璃效果 ===== */
-    .example-btn button {
-        background: linear-gradient(
-            135deg,
-            rgba(102, 126, 234, 0.2) 0%,
-            rgba(118, 75, 162, 0.15) 100%
-        ) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        border: 1px solid rgba(102, 126, 234, 0.3) !important;
-        border-radius: 12px !important;
-        box-shadow: 
-            0 4px 15px rgba(102, 126, 234, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-        font-size: 0.9rem !important;
-        font-weight: 500 !important;
-        padding: 0.6rem 1rem !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        position: relative !important;
-        overflow: hidden !important;
-    }
-    
-    .example-btn button:hover {
-        background: linear-gradient(
-            135deg,
-            rgba(102, 126, 234, 0.35) 0%,
-            rgba(118, 75, 162, 0.25) 100%
-        ) !important;
-        border-color: rgba(102, 126, 234, 0.6) !important;
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 
-            0 8px 25px rgba(102, 126, 234, 0.3),
-            0 0 20px rgba(102, 126, 234, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-    }
-    
-    .example-btn button:active {
-        transform: translateY(0) scale(0.98) !important;
-    }
-    
-    /* ===== 指标卡片 ===== */
-    .metric-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 1rem 1.25rem;
-        text-align: center;
-    }
-    
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .metric-label {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.85rem;
-        margin-top: 0.25rem;
-    }
-    
-    /* ===== 结果展示 ===== */
-    .result-card {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .result-card::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .result-card .content {
-        padding-left: 1rem;
-    }
-    
-    /* ===== 查询标签 ===== */
-    .query-tag {
-        display: inline-block;
-        background: rgba(102, 126, 234, 0.2);
-        border: 1px solid rgba(102, 126, 234, 0.3);
+    /* 按钮样式 */
+    .stButton>button {
+        background: #1a1a1a;
+        color: white;
         border-radius: 8px;
-        padding: 0.5rem 1rem;
-        color: #a0aeff;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        font-weight: 500;
+        transition: all 0.2s;
     }
-    
-    /* ===== 标题样式 ===== */
-    h1, h2, h3 {
-        color: #ffffff !important;
-    }
-    
-    .section-title {
-        color: #ffffff;
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    /* ===== 信息提示 ===== */
-    .stInfo, .stSuccess, .stWarning, .stError {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-        color: #ffffff !important;
-    }
-    
-    /* ===== Expander ===== */
-    .streamlit-expanderHeader {
-        background: rgba(255, 255, 255, 0.05) !important;
-        border-radius: 12px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #ffffff !important;
-    }
-    
-    .streamlit-expanderContent {
-        background: rgba(255, 255, 255, 0.03) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-top: none !important;
-        border-radius: 0 0 12px 12px !important;
-    }
-    
-    /* ===== 分隔线 ===== */
-    hr {
-        border-color: rgba(255, 255, 255, 0.1) !important;
-        margin: 2rem 0 !important;
-    }
-    
-    /* ===== 标签文字 ===== */
-    .stMarkdown p, .stMarkdown li {
-        color: rgba(255, 255, 255, 0.8);
-    }
-    
-    label {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    /* ===== 链接 ===== */
-    a {
-        color: #667eea !important;
-        text-decoration: none !important;
-        transition: color 0.2s ease !important;
-    }
-    
-    a:hover {
-        color: #a0aeff !important;
-    }
-    
-    /* ===== 滚动条 ===== */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: rgba(102, 126, 234, 0.3);
-        border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(102, 126, 234, 0.5);
-    }
-    
-    /* ===== Spinner ===== */
-    .stSpinner > div {
-        border-color: #667eea !important;
-    }
-    
-    /* ===== Footer ===== */
-    .footer {
-        text-align: center;
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 0.85rem;
-        padding: 2rem 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        margin-top: 3rem;
-    }
-    
-    /* ===== 动画 ===== */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .animate-in {
-        animation: fadeIn 0.5s ease forwards;
-    }
-    
-    /* ===== 表单 ===== */
-    [data-testid="stForm"] {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 1rem;
+    .stButton>button:hover {
+        background: #404040;
+        transform: translateY(-1px);
     }
 </style>
 """, unsafe_allow_html=True)
 
 load_dotenv()
 
-# ==================== 初始化 Session State ====================
+# ==================== 侧边栏：API 配置 ====================
+st.sidebar.title("⚙️ API 配置")
+st.sidebar.markdown("---")
+
+# 初始化 session state
 if 'api_configured' not in st.session_state:
     st.session_state.api_configured = False
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'current_input' not in st.session_state:
     st.session_state.current_input = ""
-if 'api_key' not in st.session_state:
-    st.session_state.api_key = ""
-if 'base_url' not in st.session_state:
-    st.session_state.base_url = "https://api.siliconflow.cn/v1"
-if 'model' not in st.session_state:
-    st.session_state.model = "Qwen/Qwen2.5-7B-Instruct"
 
-# 定义全局 API 变量（从 session state 读取）
-api_key = st.session_state.api_key
-base_url = st.session_state.base_url
-model = st.session_state.model
+# 检查是否有 Streamlit Secrets
+has_secrets = False
+try:
+    if hasattr(st, 'secrets') and 'api-key' in st.secrets:
+        has_secrets = True
+        st.sidebar.success("✅ 使用 Streamlit Secrets 配置")
+        st.session_state.api_configured = True
+        api_key = st.secrets['api-key']
+        base_url = st.secrets.get('base-url', 'https://api.siliconflow.cn/v1')
+        model = st.secrets.get('model', 'Qwen/Qwen2.5-7B-Instruct')
+except:
+    pass
 
-# ==================== 侧边栏 ====================
-with st.sidebar:
-    # Logo 和标题
-    st.markdown("""
-    <div style="text-align: center; padding: 1rem 0 2rem 0;">
-        <div style="font-size: 3rem; margin-bottom: 0.5rem;"></div>
-        <div style="font-size: 2.25rem; font-weight: 600; color: #ffffff;">AI Stock Agent</div>
-        <div style="font-size: 1.85rem; color: rgba(255,255,255,0.5);">智能股票分析助手</div>
-    </div>
-    """, unsafe_allow_html=True)
+# 如果没有 Secrets，让用户输入
+if not has_secrets:
+    st.sidebar.markdown("### 🔑 输入 API 密钥")
+    st.sidebar.info("💡 API 密钥仅保存在当前会话中（不会持久化）")
     
-    st.markdown("---")
-    
-    # 检查 Streamlit Secrets
-    has_secrets = False
-    try:
-        if hasattr(st, 'secrets') and 'api-key' in st.secrets:
-            has_secrets = True
-            st.success("✅ 已使用 Secrets 配置")
-            st.session_state.api_configured = True
-            st.session_state.api_key = st.secrets['api-key']
-            st.session_state.base_url = st.secrets.get('base-url', 'https://api.siliconflow.cn/v1')
-            st.session_state.model = st.secrets.get('model', 'Qwen/Qwen2.5-7B-Instruct')
-    except:
-        pass
-    
-    # API 配置表单
-    if not has_secrets:
-        st.markdown("### 🔑 API 配置")
+    with st.sidebar.form("api_config_form"):
+        api_key_input = st.text_input(
+            "API 密钥",
+            type="password",
+            placeholder="sk-xxx 或你的 API 密钥",
+            help="从 SiliconFlow、智谱 AI 等平台获取免费 API"
+        )
         
-        # 先检查是否已配置
-        if st.session_state.api_configured:
-            st.success(f"✅ API 已配置 (模型: {st.session_state.model})")
-            
-            if st.button("🔄 重新配置", use_container_width=True):
-                st.session_state.api_configured = False
+        base_url_input = st.text_input(
+            "API 地址",
+            value="https://api.siliconflow.cn/v1",
+            placeholder="https://api.siliconflow.cn/v1"
+        )
+        
+        model_input = st.text_input(
+            "模型",
+            value="Qwen/Qwen2.5-7B-Instruct",
+            placeholder="Qwen/Qwen2.5-7B-Instruct"
+        )
+        
+        test_btn = st.form_submit_button("🧪 测试并保存", use_container_width=True)
+        
+        if test_btn and api_key_input:
+            # 测试 API
+            try:
+                test_llm = ChatOpenAI(
+                    model=model_input,
+                    api_key=api_key_input,
+                    base_url=base_url_input,
+                    temperature=0.3,
+                    timeout=10
+                )
+                # 简单测试
+                test_llm.invoke("Hi")
+                
+                # 保存到 session
+                st.session_state.api_key = api_key_input
+                st.session_state.base_url = base_url_input
+                st.session_state.model = model_input
+                st.session_state.api_configured = True
+                
+                st.sidebar.success("✅ API 可用！可以开始分析了")
                 st.rerun()
-        else:
-            # 未配置时显示表单
-            with st.form("api_config_form"):
-                api_key_input = st.text_input(
-                    "API 密钥",
-                    type="password",
-                    placeholder="sk-xxx",
-                    help="从 SiliconFlow 等平台获取"
-                )
                 
-                base_url_input = st.text_input(
-                    "API 地址",
-                    value="https://api.siliconflow.cn/v1",
-                    placeholder="https://api.siliconflow.cn/v1"
-                )
-                
-                model_input = st.text_input(
-                    "模型",
-                    value="Qwen/Qwen2.5-7B-Instruct",
-                    placeholder="Qwen/Qwen2.5-7B-Instruct"
-                )
-                
-                test_btn = st.form_submit_button("🧪 测试连接", use_container_width=True)
-                
-                if test_btn and api_key_input:
-                    try:
-                        test_llm = ChatOpenAI(
-                            model=model_input,
-                            api_key=api_key_input,
-                            base_url=base_url_input,
-                            temperature=0.3,
-                            timeout=10
-                        )
-                        test_llm.invoke("Hi")
-                        
-                        st.session_state.api_key = api_key_input
-                        st.session_state.base_url = base_url_input
-                        st.session_state.model = model_input
-                        st.session_state.api_configured = True
-                        
-                        st.success("✅ 连接成功！")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ 连接失败: {str(e)}")
-                elif test_btn:
-                    st.warning("⚠️ 请输入 API 密钥")
+            except Exception as e:
+                st.sidebar.error(f"❌ API 测试失败: {type(e).__name__}")
+                st.sidebar.info("💡 请检查 API 密钥和地址是否正确")
         
-        st.markdown("---")
-        
-        # 获取 API 链接
-        st.markdown("### 🆓 免费 API")
-        st.markdown("""
-        - [SiliconFlow](https://siliconflow.cn) - 推荐 ⭐
-        - [智谱 AI](https://open.bigmodel.cn)
-        - [月之暗面](https://platform.moonshot.cn)
-        """)
+        elif test_btn and not api_key_input:
+            st.sidebar.warning("⚠️ 请输入 API 密钥")
     
-    st.markdown("---")
+    # 获取免费 API 链接
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🆓 获取免费 API")
+    st.sidebar.markdown("""
+    **推荐平台：**
+    - [SiliconFlow](https://siliconflow.cn) - 免费额度充足
+    - [智谱 AI](https://open.bigmodel.cn) - 新用户免费 tokens
+    - [月之暗面](https://platform.moonshot.cn) - 新用户礼包
+    """)
     
-    # 快速示例
-    st.markdown("### 💡 快速示例")
+    # 使用步骤
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 📖 使用步骤")
+    st.sidebar.markdown("""
+    **第一步：获取 API**
+    1. 点击上方任一平台链接
+    2. 注册账号（手机号即可）
+    3. 进入控制台创建 API 密钥
+    4. 复制 API 密钥
     
-    examples = [
-        ("📈 茅台走势", "分析贵州茅台（600519）的走势"),
-        ("📰 平安新闻", "获取平安银行（000001）的最新新闻"),
-        ("📊 招行指标", "计算招商银行（600036）的技术指标"),
-        ("🏭 五粮液对比", "对比五粮液（000858）的行业地位"),
-        ("🔍 宁德综合", "综合分析宁德时代（300750）")
-    ]
+    **第二步：配置**
+    1. 将 API 密钥粘贴到上方输入框
+    2. 确认 API 地址正确
+    3. 点击"测试并保存"
+    4. 看到✅表示成功
     
-    st.markdown('<div class="example-btn">', unsafe_allow_html=True)
-    for label, query in examples:
-        if st.button(label, key=f"ex_{label}", use_container_width=True):
-            st.session_state.user_input_area = query
+    **第三步：使用**
+    1. 在右侧点击示例按钮
+    2. 或输入你的问题
+    3. 点击"开始分析"
+    4. 等待 AI 分析结果
+    
+    **提示：**
+    - API 密钥仅本次会话有效
+    - 刷新页面需重新输入
+    - 分析需要 10-30 秒
+    """)
+    
+    # 从 session 读取（如果已配置）
+    if st.session_state.api_configured:
+        api_key = st.session_state.api_key
+        base_url = st.session_state.base_url
+        model = st.session_state.model
+        st.sidebar.success("✅ API 已配置")
+        if st.sidebar.button("🔄 重新配置", use_container_width=True):
+            st.session_state.api_configured = False
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== 主界面 ====================
 
-# 英雄区域
-st.markdown("""
-<div class="hero-section">
-    <h1 class="hero-title">AI Stock Analysis</h1>
-    <p class="hero-subtitle">基于 LangChain 和 AkShare 的智能 A 股分析系统</p>
-</div>
-""", unsafe_allow_html=True)
-
-# 检查 API 配置
+# 检查 API 是否配置
 if not st.session_state.api_configured:
+    st.title("📊 AI 股票分析助手")
+    st.markdown("---")
+    st.info("👈 请在左侧边栏配置 API 后开始使用")
+    
+    st.markdown("### 🚀 快速开始")
     st.markdown("""
-    <div class="glass-card" style="text-align: center; padding: 3rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🔐</div>
-        <div style="color: #ffffff; font-size: 1.25rem; margin-bottom: 0.5rem;">请先配置 API</div>
-        <div style="color: rgba(255,255,255,0.5);">在左侧边栏输入您的 API 密钥以开始使用</div>
-    </div>
-    """, unsafe_allow_html=True)
+    1. 从 [SiliconFlow](https://siliconflow.cn) 或其他平台获取免费 API 密钥
+    2. 在左侧边栏输入 API 密钥
+    3. 点击"测试并保存"
+    4. 开始分析股票！
+    """)
     
-    # 功能介绍
+    st.markdown("### 💡 功能特色")
     col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("""
-        <div class="glass-card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📈</div>
-            <div style="color: #ffffff; font-weight: 600;">历史走势</div>
-            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">获取股票价格和成交量数据</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="glass-card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-            <div style="color: #ffffff; font-weight: 600;">技术分析</div>
-            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">计算 MACD、RSI、均线等指标</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class="glass-card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📰</div>
-            <div style="color: #ffffff; font-weight: 600;">新闻资讯</div>
-            <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">获取最新市场动态和新闻</div>
-        </div>
-        """, unsafe_allow_html=True)
+    col1.markdown("📈 **历史走势**\n分析价格趋势")
+    col2.markdown("📰 **最新新闻**\n获取市场动态")
+    col3.markdown("📊 **技术指标**\nMACD、RSI、均线等")
     
     st.stop()
 
-# ==================== 已配置 API，显示主功能 ====================
+# API 已配置，显示主界面
+st.title("📊 AI 股票分析助手")
+st.caption("基于 LangChain 和 AkShare · 支持中英文查询")
+st.markdown("---")
+
+# 快速示例
+st.subheader("💡 快速示例")
+
+examples = [
+    "分析贵州茅台（600519）的走势",
+    "获取平安银行（000001）的最新新闻",
+    "计算招商银行（600036）的技术指标",
+    "对比五粮液（000858）的行业地位",
+    "综合分析宁德时代（300750）"
+]
+
+cols = st.columns(5)
+for idx, (col, example) in enumerate(zip(cols, examples)):
+    with col:
+        if st.button(f"示例 {idx+1}", key=f"ex_{idx}", use_container_width=True):
+            st.session_state.current_input = example
+            st.rerun()
 
 # 输入区域
-st.markdown('<div class="section-title">🔍 输入您的分析需求</div>', unsafe_allow_html=True)
-
-# 使用 key 直接绑定到 session_state
-if 'user_input_area' not in st.session_state:
-    st.session_state.user_input_area = st.session_state.current_input
+st.markdown("### 🔍 输入您的问题")
 
 user_input = st.text_area(
-    "分析需求",
-    height=120,
-    placeholder="例如：分析贵州茅台（600519）的技术指标和最新新闻，给出投资建议...",
-    label_visibility="collapsed",
-    key="user_input_area"
+    "",
+    value=st.session_state.current_input,
+    height=100,
+    placeholder="例如：分析贵州茅台的技术指标和最新新闻",
+    label_visibility="collapsed"
 )
 
-# 按钮行
-col1, col2, col3 = st.columns([1, 1, 3])
+if user_input != st.session_state.current_input:
+    st.session_state.current_input = user_input
 
+# 按钮
+col1, col2 = st.columns([1, 5])
 with col1:
     analyze_btn = st.button("🚀 开始分析", type="primary", use_container_width=True)
-
-with col2:
-    clear_btn = st.button("🗑️ 清空", use_container_width=True)
+    clear_btn = st.button("🗑️ 清空历史", use_container_width=True)
 
 if clear_btn:
     st.session_state.history = []
     st.session_state.current_input = ""
-    st.success("✅ 已清空！")
+    st.success("✅ 已清空历史记录！")
     st.rerun()
 
-# ==================== 执行分析 ====================
+# 执行分析
 if analyze_btn and user_input:
     progress_container = st.empty()
     
     with progress_container:
-        with st.spinner("🤔 AI 正在深度分析中，请稍候..."):
+        with st.spinner("🤔 AI 正在分析中..."):
             try:
                 tools = [
                     get_stock_history,
@@ -690,9 +299,9 @@ if analyze_btn and user_input:
                 tool_map = {tool.name: tool for tool in tools}
                 
                 llm = ChatOpenAI(
-                    model=st.session_state.model,
-                    api_key=st.session_state.api_key,
-                    base_url=st.session_state.base_url,
+                    model=model,
+                    api_key=api_key,
+                    base_url=base_url,
                     temperature=0.7
                 )
                 
@@ -708,14 +317,25 @@ if analyze_btn and user_input:
 数据范围：
 - ✅ 支持：沪深 A 股（如 600519 贵州茅台、000001 平安银行）
 - ❌ 不支持：美股、港股、其他国际市场
+- 如果用户查询非 A 股，明确告知：
+  "抱歉，本系统使用 AkShare 数据源，目前仅支持中国 A 股数据。您查询的 XX 是美股/港股，无法提供分析。建议查询 A 股股票，例如：贵州茅台（600519）、宁德时代（300750）等。"
 
-分析流程：
-1. 使用工具获取真实数据
-2. 深度分析：趋势、风险、机会
-3. 专业洞察：技术面、基本面、市场情绪
-4. 明确结论：评估、要点、风险提示
+分析流程（有真实数据时）：
+1. 使用工具获取真实数据（价格、新闻、技术指标）
+2. 深度分析数据：
+   - 这些数字说明了什么？
+   - 趋势是什么？
+   - 风险和机会在哪里？
+3. 提供专业洞察：
+   - 技术分析（支撑/阻力位、趋势、信号）
+   - 基本面分析（估值、增长、竞争地位）
+   - 市场情绪（新闻解读、行业展望）
+4. 给出明确结论：
+   - 综合评估（看涨/看跌/中性）
+   - 投资者关键要点
+   - 风险提示
 
-记住：诚实 > 空谈。没有数据就说没有！"""
+记住：诚实 > 空谈。没有数据就说没有，不要编造！"""
 
                 prompt = ChatPromptTemplate.from_messages([
                     ("system", system_prompt),
@@ -738,6 +358,7 @@ if analyze_btn and user_input:
                         })
                         st.session_state.current_input = ""
                         progress_container.empty()
+                        st.success(f"✅ 分析完成！（用了 {iteration_count} 步）")
                         st.rerun()
                         break
                     
@@ -761,80 +382,46 @@ if analyze_btn and user_input:
                                 ))
                 else:
                     progress_container.empty()
-                    st.warning("⚠️ 达到最大分析轮次")
+                    st.warning("⚠️ 达到最大迭代次数")
                 
             except Exception as e:
                 progress_container.empty()
-                st.error(f"❌ 分析出错: {type(e).__name__}")
+                st.error(f"❌ 错误: {type(e).__name__}")
+                st.info("💡 请检查左侧边栏的 API 配置")
 
-# ==================== 显示分析结果 ====================
+# 显示结果
 if st.session_state.history:
     st.markdown("---")
+    st.subheader("📊 分析结果")
     
+    col1, col2, col3 = st.columns(3)
     latest = st.session_state.history[0]
     
-    # 指标卡片
-    st.markdown('<div class="section-title">📊 分析概览</div>', unsafe_allow_html=True)
+    col1.metric("分析步骤", latest.get('steps', '?'))
+    col2.metric("结果长度", len(latest['result']))
+    col3.metric("历史记录", len(st.session_state.history))
     
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown("#### 🔍 查询")
+    st.info(latest['query'])
     
-    metrics = [
-        ("分析步骤", latest.get('steps', '?'), "🔄"),
-        ("结果长度", len(latest['result']), "📝"),
-        ("历史记录", len(st.session_state.history), "📚"),
-        ("完成时间", latest['time'], "⏱️")
-    ]
+    st.markdown("#### ✨ 分析结果")
+    st.success(latest['result'])
     
-    for col, (label, value, icon) in zip([col1, col2, col3, col4], metrics):
-        with col:
-            st.markdown(f"""
-            <div class="metric-card">
-                <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">{icon}</div>
-                <div class="metric-value">{value}</div>
-                <div class="metric-label">{label}</div>
-            </div>
-            """, unsafe_allow_html=True)
+    st.caption(f"⏱️ {latest['time']} · 🔄 {latest.get('steps', '?')} 步")
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 查询内容
-    st.markdown('<div class="section-title">🔍 分析查询</div>', unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="query-tag">{latest['query']}</div>
-    """, unsafe_allow_html=True)
-    
-    # 分析结果
-    st.markdown('<div class="section-title">✨ 分析结果</div>', unsafe_allow_html=True)
-    
-    # 直接渲染 Markdown 结果
-    st.markdown(latest['result'])
-    
-    # 历史记录
     if len(st.session_state.history) > 1:
         st.markdown("---")
-        st.markdown('<div class="section-title">📜 历史记录</div>', unsafe_allow_html=True)
+        st.markdown("### 📜 历史记录")
         
-        for idx, record in enumerate(st.session_state.history[1:6]):
-            with st.expander(f"⏱️ {record['time']} - {record['query'][:50]}..."):
+        for record in st.session_state.history[1:6]:
+            with st.expander(f"{record['time']} - {record['query'][:40]}..."):
                 st.markdown(f"**查询：** {record['query']}")
-                st.caption(f"分析步骤: {record.get('steps', '?')}")
+                st.caption(f"步骤: {record.get('steps', '?')}")
                 st.divider()
                 st.write(record['result'])
 
 else:
-    # 没有历史记录时的提示
-    st.markdown("""
-    <div class="glass-card" style="text-align: center; padding: 3rem; margin-top: 2rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">💡</div>
-        <div style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">准备好开始了吗？</div>
-        <div style="color: rgba(255,255,255,0.5);">在上方输入您的分析需求，或点击左侧示例快速开始</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("👆 点击上方示例按钮，或输入您的问题")
 
-# ==================== 页脚 ====================
-st.markdown("""
-<div class="footer">
-    <div>基于 LangChain × AkShare 构建</div>
-    <div style="margin-top: 0.5rem;">⚠️ 仅供学习研究使用，不构成任何投资建议</div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.caption("基于 LangChain × AkShare 构建 · ⚠️ 仅供学习使用，不构成投资建议")
