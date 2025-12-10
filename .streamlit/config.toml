@@ -1,8 +1,8 @@
 [theme]
-primaryColor = "#1a1a1a"
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#fafafa"
-textColor = "#171717"
+primaryColor = "#667eea"
+backgroundColor = "#0f0f1a"
+secondaryBackgroundColor = "#1a1a2e"
+textColor = "#ffffff"
 font = "sans serif"
 # 按钮文字会使用 primaryColor 的对比色
 
