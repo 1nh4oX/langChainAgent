@@ -44,7 +44,7 @@
 **使用：**
 
 ```bash
-streamlit run ui/streamlit_app_with_login.py
+streamlit run ui/streamlit_app_modern.py
 ```
 
 **特色：**
@@ -66,7 +66,7 @@ streamlit run ui/streamlit_app_with_login.py
 
 **说明：**
 
-`streamlit_app_with_login.py` 已实现混合模式！
+`streamlit_app_modern.py` 已实现混合模式！
 
 ```python
 # 自动检测
@@ -135,7 +135,7 @@ model = "Qwen/Qwen2.5-7B-Instruct"
 
 在 Streamlit Cloud 部署时：
 
-- **Main file:** `ui/streamlit_app_with_login.py`
+- **Main file:** `ui/streamlit_app_modern.py`
 
 ### 2. 上传到 GitHub
 
@@ -173,7 +173,7 @@ git push
 
 ## 🆓 提供给用户的免费 API 指南
 
-在 `streamlit_app_with_login.py` 中已包含：
+在 `streamlit_app_modern.py` 中已包含：
 
 ```python
 st.sidebar.markdown("""
@@ -205,7 +205,7 @@ st.sidebar.markdown("""
 ✅ 直接使用（Secrets 已配置）
 ```
 
-### streamlit_app_with_login.py（方案 B/C）
+### streamlit_app_modern.py（方案 B/C）
 
 ```
 ┌─────────┬────────────────┐
@@ -252,7 +252,7 @@ streamlit run ui/streamlit_app.py
 
 ```bash
 # 直接运行
-streamlit run ui/streamlit_app_with_login.py
+streamlit run ui/streamlit_app_modern.py
 
 # 在侧边栏输入 API
 ```
@@ -264,10 +264,10 @@ streamlit run ui/streamlit_app_with_login.py
 | 场景 | 推荐方案 | 文件 |
 |------|---------|------|
 | **个人使用** | A | `streamlit_app.py` + Secrets |
-| **组员协作** | C | `streamlit_app_with_login.py` + Secrets |
-| **公开分享** | B | `streamlit_app_with_login.py` |
-| **教学演示** | B | `streamlit_app_with_login.py` |
-| **商业应用** | C | `streamlit_app_with_login.py` + 后端 API |
+| **组员协作** | C | `streamlit_app_modern.py` + Secrets |
+| **公开分享** | B | `streamlit_app_modern.py` |
+| **教学演示** | B | `streamlit_app_modern.py` |
+| **商业应用** | C | `streamlit_app_modern.py` + 后端 API |
 
 ---
 
@@ -345,7 +345,7 @@ git push origin main
 ```
 Repository: your-repo
 Branch: main
-Main file: ui/streamlit_app_with_login.py  ← 混合模式
+Main file: ui/streamlit_app_modern.py  ← 混合模式
 ```
 
 ### 4A. 如果你要自己用
@@ -374,7 +374,7 @@ model = "Qwen/Qwen2.5-7B-Instruct"
 
 ### 最佳实践
 
-1. **使用 `streamlit_app_with_login.py`** - 混合模式
+1. **使用 `streamlit_app_modern.py`** - 混合模式
 2. **本地开发：** 使用 `.streamlit/secrets.toml`
 3. **个人部署：** 配置 Streamlit Cloud Secrets
 4. **公开分享：** 不配置 Secrets，让用户输入
@@ -385,7 +385,7 @@ model = "Qwen/Qwen2.5-7B-Instruct"
 |------|------|---------|
 | `streamlit_app.py` | 需要 Secrets | 个人使用 |
 | `streamlit_app_cn.py` | 中文版，需要 Secrets | 个人使用 |
-| `streamlit_app_with_login.py` | 混合模式 | **推荐**⭐ |
+| `streamlit_app_modern.py` | 混合模式 | **推荐**⭐ |
 
 ### 推荐配置
 
@@ -393,7 +393,7 @@ model = "Qwen/Qwen2.5-7B-Instruct"
 # Streamlit Cloud 部署配置
 repository: your-username/langChainAgent
 branch: main
-main_file: ui/streamlit_app_with_login.py
+main_file: ui/streamlit_app_modern.py
 python_version: 3.9
 
 # Secrets（可选，适合自己用）
