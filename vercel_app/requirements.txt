@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-dotenv
+langchain-openai
+langchain-core
+langchain
+pydantic
+akshare
+pandas
+numpy
+lxml
+requests
+beautifulsoup4
+html5lib

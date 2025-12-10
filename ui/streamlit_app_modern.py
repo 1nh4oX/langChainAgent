@@ -38,6 +38,9 @@ from src.tools import (
     analyze_stock_comprehensive
 )
 
+# 导入多Agent系统
+from src.agent.multi_agent_system import MultiAgentTradingSystem, AgentRole
+
 # ==================== 页面配置 ====================
 st.set_page_config(
     page_title="AI Stock Analysis",
@@ -469,6 +472,15 @@ if 'base_url' not in st.session_state:
     st.session_state.base_url = "https://api.siliconflow.cn/v1"
 if 'model' not in st.session_state:
     st.session_state.model = "Qwen/Qwen2.5-7B-Instruct"
+# 多Agent模式
+if 'analysis_mode' not in st.session_state:
+    st.session_state.analysis_mode = "单Agent模式"
+if 'multi_agent_results' not in st.session_state:
+    st.session_state.multi_agent_results = []
+if 'debate_threshold' not in st.session_state:
+    st.session_state.debate_threshold = 3.0
+if 'max_debate_rounds' not in st.session_state:
+    st.session_state.max_debate_rounds = 2
 
 # 定义全局 API 变量（从 session state 读取）
 api_key = st.session_state.api_key
@@ -561,7 +573,7 @@ with st.sidebar:
         
         st.markdown("---")
         
-        # 获取 API 链接
+        # 免费 API 链接
         st.markdown("### 🆓 免费 API")
         st.markdown("""
         - [SiliconFlow](https://siliconflow.cn) - 推荐 ⭐
@@ -570,6 +582,40 @@ with st.sidebar:
         """)
     
     st.markdown("---")
+    
+    # 分析模式选择器
+    st.markdown("### 🎯 分析模式")
+    analysis_mode = st.radio(
+        "选择分析模式",
+        ["单Agent模式", "多Agent协作"],
+        index=0 if st.session_state.analysis_mode == "单Agent模式" else 1,
+        label_visibility="collapsed",
+        help="单Agent模式：快速分析\n多Agent协作：5个专业Agent协作+辩论机制"
+    )
+    st.session_state.analysis_mode = analysis_mode
+    
+    # 如果是多Agent模式,显示辩论参数
+    if analysis_mode == "多Agent协作":
+        st.markdown("**辩论参数配置**")
+        
+        debate_threshold = st.slider(
+            "辩论触发阈值",
+            min_value=1.0,
+            max_value=10.0,
+            value=st.session_state.debate_threshold,
+            step=0.5,
+            help="多空评分差异超过此值时触发辩论"
+        )
+        st.session_state.debate_threshold = debate_threshold
+        
+        max_rounds = st.slider(
+            "最大辩论轮次",
+            min_value=1,
+            max_value=3,
+            value=st.session_state.max_debate_rounds,
+            help="为节省API成本,建议1-2轮"
+        )
+        st.session_state.max_debate_rounds = max_rounds
     
     # 快速示例
     st.markdown("### 💡 快速示例")
@@ -677,28 +723,70 @@ if clear_btn:
 if analyze_btn and user_input:
     progress_container = st.empty()
     
-    with progress_container:
-        with st.spinner("🤔 AI 正在深度分析中，请稍候..."):
-            try:
-                tools = [
-                    get_stock_history,
-                    get_stock_news,
-                    get_stock_technical_indicators,
-                    get_industry_comparison,
-                    analyze_stock_comprehensive
-                ]
-                tool_map = {tool.name: tool for tool in tools}
-                
-                llm = ChatOpenAI(
-                    model=st.session_state.model,
-                    api_key=st.session_state.api_key,
-                    base_url=st.session_state.base_url,
-                    temperature=0.7
-                )
-                
-                llm_with_tools = llm.bind_tools(tools)
-                
-                system_prompt = """你是一位拥有10年以上经验的资深股票分析师。
+    # 根据模式执行不同的分析
+    if st.session_state.analysis_mode == "多Agent协作":
+        # 多Agent模式 - 需要股票代码
+        import re
+        stock_code_match = re.search(r'\b\d{6}\b', user_input)
+        
+        if stock_code_match:
+            symbol = stock_code_match.group()
+            
+            with progress_container:
+                with st.spinner("🤖 多Agent系统正在协作分析中..."):
+                    try:
+                        # 初始化多Agent系统
+                        system = MultiAgentTradingSystem(
+                            analysis_model=st.session_state.model,
+                            analysis_api_key=st.session_state.api_key,
+                            analysis_base_url=st.session_state.base_url,
+                            use_same_model=True,
+                            debate_threshold=st.session_state.debate_threshold,
+                            max_debate_rounds=st.session_state.max_debate_rounds,
+                            temperature=0.7
+                        )
+                        
+                        # 运行分析
+                        result = system.run_analysis(symbol, verbose=False)
+                        
+                        # 保存结果
+                        st.session_state.multi_agent_results.insert(0, result)
+                        st.session_state.current_input = ""
+                        
+                        progress_container.empty()
+                        st.success("✅ 多Agent分析完成!")
+                        st.rerun()
+                        
+                    except Exception as e:
+                        progress_container.empty()
+                        st.error(f"❌ 多Agent分析出错: {str(e)}")
+        else:
+            st.error("❌ 多Agent模式需要输入6位股票代码 (如: 600519)")
+    
+    else:
+        # 单Agent模式 - 原有逻辑
+        with progress_container:
+            with st.spinner("🤔 AI 正在深度分析中，请稍候..."):
+                try:
+                    tools = [
+                        get_stock_history,
+                        get_stock_news,
+                        get_stock_technical_indicators,
+                        get_industry_comparison,
+                        analyze_stock_comprehensive
+                    ]
+                    tool_map = {tool.name: tool for tool in tools}
+                    
+                    llm = ChatOpenAI(
+                        model=st.session_state.model,
+                        api_key=st.session_state.api_key,
+                        base_url=st.session_state.base_url,
+                        temperature=0.7
+                    )
+                    
+                    llm_with_tools = llm.bind_tools(tools)
+                    
+                    system_prompt = """你是一位拥有10年以上经验的资深股票分析师。
 
 ⚠️ 重要规则：
 1. **必须使用工具获取真实数据** - 如果工具调用失败，明确告知用户
@@ -717,57 +805,156 @@ if analyze_btn and user_input:
 
 记住：诚实 > 空谈。没有数据就说没有！"""
 
-                prompt = ChatPromptTemplate.from_messages([
-                    ("system", system_prompt),
-                    MessagesPlaceholder(variable_name="messages"),
-                ])
-                
-                messages = [{"role": "user", "content": user_input}]
-                iteration_count = 0
-                
-                for i in range(10):
-                    iteration_count = i + 1
-                    response = (prompt | llm_with_tools).invoke({"messages": messages})
+                    prompt = ChatPromptTemplate.from_messages([
+                        ("system", system_prompt),
+                        MessagesPlaceholder(variable_name="messages"),
+                    ])
                     
-                    if not response.tool_calls:
-                        st.session_state.history.insert(0, {
-                            "query": user_input,
-                            "result": response.content,
-                            "time": datetime.now().strftime("%H:%M"),
-                            "steps": iteration_count
-                        })
-                        st.session_state.current_input = ""
-                        progress_container.empty()
-                        st.rerun()
-                        break
+                    messages = [{"role": "user", "content": user_input}]
+                    iteration_count = 0
                     
-                    messages.append(response)
-                    
-                    for tool_call in response.tool_calls:
-                        tool_name = tool_call["name"]
-                        tool_args = tool_call["args"]
+                    for i in range(10):
+                        iteration_count = i + 1
+                        response = (prompt | llm_with_tools).invoke({"messages": messages})
                         
-                        if tool_name in tool_map:
-                            try:
-                                output = tool_map[tool_name].invoke(tool_args)
-                                messages.append(ToolMessage(
-                                    content=str(output),
-                                    tool_call_id=tool_call["id"]
-                                ))
-                            except Exception as e:
-                                messages.append(ToolMessage(
-                                    content=f"Error: {type(e).__name__}",
-                                    tool_call_id=tool_call["id"]
-                                ))
-                else:
+                        if not response.tool_calls:
+                            st.session_state.history.insert(0, {
+                                "query": user_input,
+                                "result": response.content,
+                                "time": datetime.now().strftime("%H:%M"),
+                                "steps": iteration_count
+                            })
+                            st.session_state.current_input = ""
+                            progress_container.empty()
+                            st.rerun()
+                            break
+                        
+                        messages.append(response)
+                        
+                        for tool_call in response.tool_calls:
+                            tool_name = tool_call["name"]
+                            tool_args = tool_call["args"]
+                            
+                            if tool_name in tool_map:
+                                try:
+                                    output = tool_map[tool_name].invoke(tool_args)
+                                    messages.append(ToolMessage(
+                                        content=str(output),
+                                        tool_call_id=tool_call["id"]
+                                    ))
+                                except Exception as e:
+                                    messages.append(ToolMessage(
+                                        content=f"Error: {type(e).__name__}",
+                                        tool_call_id=tool_call["id"]
+                                    ))
+                    else:
+                        progress_container.empty()
+                        st.warning("⚠️ 达到最大分析轮次")
+                    
+                except Exception as e:
                     progress_container.empty()
-                    st.warning("⚠️ 达到最大分析轮次")
-                
-            except Exception as e:
-                progress_container.empty()
-                st.error(f"❌ 分析出错: {type(e).__name__}")
+                    st.error(f"❌ 分析出错: {type(e).__name__}")
 
-# ==================== 显示分析结果 ====================
+# ==================== 显示多Agent分析结果 ====================
+if st.session_state.multi_agent_results:
+    st.markdown("---")
+    
+    result = st.session_state.multi_agent_results[0]
+    
+    # 顶部摘要卡片
+    st.markdown(f"""
+    <div class="glass-card">
+        <h3 style="margin-top: 0;">🤖 {result.symbol} 多Agent协作分析</h3>
+        <div style="display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
+            <div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">最终建议</div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: #667eea;">{result.final_recommendation}</div>
+            </div>
+            <div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">信心水平</div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: #764ba2;">{result.confidence}</div>
+            </div>
+            <div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">辩论情况</div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: #f093fb;">
+                    {"已辩论" if result.debate_occurred else "无需辩论"}
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-bottom: 0.5rem;">分析时间</div>
+            <div>{result.timestamp}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 关键评分
+    st.markdown("### 📊 关键评分")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("数据分析", f"{result.key_data.get('data_analyst_score', 0):.1f}/10")
+    with col2:
+        st.metric("多头评审", f"{result.key_data.get('bull_score', 0):.1f}/10")
+    with col3:
+        st.metric("空头评审", f"{result.key_data.get('bear_score', 0):.1f}/10")
+    with col4:
+        st.metric("评分差异", f"{result.key_data.get('score_diff', 0):.1f}")
+    
+    # 综合建议
+    st.markdown("### 💡 综合建议")
+    st.markdown(f"""
+    <div class="glass-card">
+        {result.brief_analysis}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Agent工作流程
+    st.markdown("### 🔄 Agent工作流程")
+    
+    role_names = {
+        AgentRole.DATA_ANALYST: ("📊 数据分析师", "#667eea"),
+        AgentRole.NEWS_RESEARCHER: ("📰 新闻研究员", "#764ba2"),
+        AgentRole.BULL_REVIEWER: ("📈 多头评审", "#10b981"),
+        AgentRole.BEAR_REVIEWER: ("📉 空头评审", "#f093fb"),
+    }
+    
+    for output in result.all_agent_outputs:
+        role_name, color = role_names.get(output.role, ("Agent", "#667eea"))
+        score_text = f" - 评分: {output.score}/10" if output.score else ""
+        
+        with st.expander(f"{role_name} ({output.timestamp}){score_text}", expanded=False):
+            st.markdown(output.content)
+    
+    # 辩论详情
+    if result.debate_rounds:
+        st.markdown("### 🗣️ 辩论详情")
+        st.info(f"💬 共进行了 {len(result.debate_rounds)} 轮辩论")
+        
+        for debate in result.debate_rounds:
+            with st.expander(f"第 {debate.round_number} 轮辩论 ({debate.timestamp})", expanded=False):
+                st.markdown("#### 主持人引导")
+                st.markdown(f"""
+                <div style="background: rgba(102,126,234,0.1); border-left: 4px solid #667eea; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                    {debate.moderator_summary}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("#### 📈 多头论证")
+                st.markdown(f"""
+                <div style="background: rgba(16,185,129,0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                    {debate.bull_argument}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("#### 📉 空头论证")
+                st.markdown(f"""
+                <div style="background: rgba(240,147,251,0.1); border-left: 4px solid #f093fb; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                    {debate.bear_argument}
+                </div>
+                """, unsafe_allow_html=True)
+
+# ==================== 显示单Agent分析结果 ====================
 if st.session_state.history:
     st.markdown("---")
     

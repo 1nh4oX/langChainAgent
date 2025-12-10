@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Multi-Agent Trading System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-glow"></div>
+    <div class="grid-line"></div>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <header class="hero">
+            <h1 class="glitch" data-text="TRADING AGENT">TRADING AGENT</h1>
+            <p class="subtitle">Multi-Agent Intelligence System</p>
+            
+            <div class="input-group">
+                <input type="text" id="symbolInput" placeholder="ENTER STOCK SYMBOL (e.g. 600519)" maxlength="6">
+                <button id="analyzeBtn" class="cyber-btn">
+                    <span class="btn-text">INITIALIZE</span>
+                    <span class="btn-glitch"></span>
+                </button>
+            </div>
+            
+            <div class="config-toggle" onclick="toggleConfig()">
+                <span>Advanced Configuration</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            
+            <div id="configPanel" class="config-panel hidden">
+                <div class="config-item">
+                    <label>Debate Threshold</label>
+                    <input type="range" id="threshold" min="1.0" max="10.0" step="0.5" value="3.0">
+                    <span id="thresholdVal">3.0</span>
+                </div>
+                <div class="config-item">
+                    <label>Max Rounds</label>
+                    <input type="range" id="maxRounds" min="1" max="3" value="2">
+                    <span id="maxRoundsVal">2</span>
+                </div>
+                <div class="config-item">
+                    <label>API Key (Optional)</label>
+                    <input type="password" id="apiKey" placeholder="SiliconFlow API Key">
+                </div>
+            </div>
+        </header>
+
+        <!-- Status Bar -->
+        <div id="statusSection" class="status-section hidden">
+            <div class="status-indicator">
+                <span class="pulse"></span>
+                <span id="statusText">SYSTEM READY</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard" class="dashboard hidden">
+            <!-- Final Result Card (Top) -->
+            <div id="finalResult" class="final-card hidden">
+                <div class="final-header">
+                    <h2>FINAL RECOMMENDATION</h2>
+                    <div id="confidenceLevel" class="confidence-badge">HIGH CONFIDENCE</div>
+                </div>
+                <div class="final-body">
+                    <div class="verdict" id="finalVerdict">BUY</div>
+                    <p class="final-desc" id="finalDesc">Analysis suggests strong upside potential...</p>
+                </div>
+                <div class="final-metrics">
+                    <div class="metric">
+                        <span class="label">Data Score</span>
+                        <span class="value" id="finalDataScore">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Consensus</span>
+                        <span class="value" id="finalConsensus">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agents Grid -->
+            <div class="agent-grid">
+                <!-- Data Analyst -->
+                <div class="agent-card" id="card-data_analyst">
+                    <div class="agent-header">
+                        <div class="agent-icon">📊</div>
+                        <h3>DATA ANALYST</h3>
+                    </div>
+                    <div class="agent-content">
+                        <div class="loader-line"></div>
+                        <div class="content-text markdown-body" id="text-data_analyst">Waiting for initialization...</div>
+                    </div>
+                    <div class="agent-footer">
+                        <span class="score-label">SCORE</span>
+                        <span class="score-value" id="score-data_analyst">--</span>
+                    </div>
+                </div>
+
+                <!-- News Researcher -->
+                <div class="agent-card" id="card-news_researcher">
+                    <div class="agent-header">
+                        <div class="agent-icon">📰</div>
+                        <h3>NEWS RESEARCHER</h3>
+                    </div>
+                    <div class="agent-content">
+                        <div class="content-text markdown-body" id="text-news_researcher">Waiting for data...</div>
+                    </div>
+                </div>
+
+                <!-- Bull Reviewer -->
+                <div class="agent-card border-green" id="card-bull_reviewer">
+                    <div class="agent-header">
+                        <div class="agent-icon">📈</div>
+                        <h3>BULL REVIEWER</h3>
+                    </div>
+                    <div class="agent-content">
+                        <div class="content-text markdown-body" id="text-bull_reviewer">Waiting for analysis...</div>
+                    </div>
+                    <div class="agent-footer">
+                        <span class="score-label">SCORE</span>
+                        <span class="score-value text-green" id="score-bull_reviewer">--</span>
+                    </div>
+                </div>
+
+                <!-- Bear Reviewer -->
+                <div class="agent-card border-red" id="card-bear_reviewer">
+                    <div class="agent-header">
+                        <div class="agent-icon">📉</div>
+                        <h3>BEAR REVIEWER</h3>
+                    </div>
+                    <div class="agent-content">
+                        <div class="content-text markdown-body" id="text-bear_reviewer">Waiting for analysis...</div>
+                    </div>
+                    <div class="agent-footer">
+                        <span class="score-label">SCORE</span>
+                        <span class="score-value text-red" id="score-bear_reviewer">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debate Section -->
+            <div id="debateSection" class="debate-section hidden">
+                <div class="debate-header">
+                    <h3>🗣️ DEBATE PROTOCOL ACTIVATED</h3>
+                    <div class="debate-round-badge" id="debateRoundInfo">ROUND 1/2</div>
+                </div>
+                <div id="debateContainer" class="debate-container">
+                    <!-- Dynamic Debate Items -->
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
