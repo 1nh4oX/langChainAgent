@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Multi-Agent Trading System</title>
+    <title>Enhanced AI Multi-Agent Trading System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="background-glow"></div>
     <div class="grid-line"></div>
@@ -16,22 +20,24 @@
     <main class="container">
         <!-- Hero Section -->
         <header class="hero">
-            <h1 class="glitch" data-text="TRADING AGENT">TRADING AGENT</h1>
-            <p class="subtitle">Multi-Agent Intelligence System</p>
-            
+            <h1 class="glitch" data-text="ENHANCED TRADING AI">ENHANCED TRADING AI</h1>
+            <p class="subtitle">4-Layer Multi-Agent Intelligence System | 11 Specialized Agents</p>
+
             <div class="input-group">
-                <input type="text" id="symbolInput" placeholder="ENTER STOCK SYMBOL (e.g. 600519)" maxlength="6">
+                <input type="text" id="symbolInput" placeholder="STOCK SYMBOL (e.g. 600519)" maxlength="6">
                 <button id="analyzeBtn" class="cyber-btn">
                     <span class="btn-text">INITIALIZE</span>
                     <span class="btn-glitch"></span>
                 </button>
             </div>
-            
+
             <div class="config-toggle" onclick="toggleConfig()">
                 <span>Advanced Configuration</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9l-7 7-7-7"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 9l-7 7-7-7" />
+                </svg>
             </div>
-            
+
             <div id="configPanel" class="config-panel hidden">
                 <div class="config-item">
                     <label>Debate Threshold</label>
@@ -63,7 +69,7 @@
 
         <!-- Main Dashboard -->
         <div id="dashboard" class="dashboard hidden">
-            <!-- Final Result Card (Top) -->
+            <!-- Final Result Card -->
             <div id="finalResult" class="final-card hidden">
                 <div class="final-header">
                     <h2>FINAL RECOMMENDATION</h2>
@@ -71,94 +77,194 @@
                 </div>
                 <div class="final-body">
                     <div class="verdict" id="finalVerdict">BUY</div>
-                    <p class="final-desc" id="finalDesc">Analysis suggests strong upside potential...</p>
+                    <p class="final-desc" id="finalDesc">Comprehensive analysis complete...</p>
                 </div>
                 <div class="final-metrics">
                     <div class="metric">
-                        <span class="label">Data Score</span>
-                        <span class="value" id="finalDataScore">-</span>
+                        <span class="label">Fundamentals</span>
+                        <span class="value" id="fundamentalsScore">-</span>
                     </div>
                     <div class="metric">
-                        <span class="label">Consensus</span>
-                        <span class="value" id="finalConsensus">-</span>
+                        <span class="label">Technical</span>
+                        <span class="value" id="technicalScore">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">Bull/Bear</span>
+                        <span class="value" id="consensusScore">-</span>
+                    </div>
+                </div>
+                <div class="position-suggestions" id="positionSuggestions"
+                    style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 0.9rem; color: #888; margin-bottom: 0.5rem;">Position Suggestions:</div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <span style="color: #ff6b6b;">Aggressive:</span> <span id="aggressivePos">-</span>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <span style="color: #4ecdc4;">Neutral:</span> <span id="neutralPos">-</span>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <span style="color: #95e1d3;">Conservative:</span> <span id="conservativePos">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Agents Grid -->
-            <div class="agent-grid">
-                <!-- Data Analyst -->
-                <div class="agent-card" id="card-data_analyst">
-                    <div class="agent-header">
-                        <div class="agent-icon">📊</div>
-                        <h3>DATA ANALYST</h3>
-                    </div>
-                    <div class="agent-content">
-                        <div class="loader-line"></div>
-                        <div class="content-text markdown-body" id="text-data_analyst">Waiting for initialization...</div>
-                    </div>
-                    <div class="agent-footer">
-                        <span class="score-label">SCORE</span>
-                        <span class="score-value" id="score-data_analyst">--</span>
-                    </div>
+            <!-- Layer 1: Analyst Team -->
+            <div class="layer-section">
+                <div class="layer-header">
+                    <h2>📊 LAYER 1: ANALYST TEAM</h2>
+                    <p class="layer-desc">4 Specialized Analysts Running in Parallel</p>
                 </div>
+                <div class="agent-grid">
+                    <!-- Fundamentals Analyst -->
+                    <div class="agent-card" id="card-fundamentals_analyst">
+                        <div class="agent-header">
+                            <div class="agent-icon">💼</div>
+                            <h3>FUNDAMENTALS</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="loader-line"></div>
+                            <div class="content-text markdown-body" id="text-fundamentals_analyst">Waiting...</div>
+                        </div>
+                        <div class="agent-footer">
+                            <span class="score-label">SCORE</span>
+                            <span class="score-value" id="score-fundamentals_analyst">--</span>
+                        </div>
+                    </div>
 
-                <!-- News Researcher -->
-                <div class="agent-card" id="card-news_researcher">
-                    <div class="agent-header">
-                        <div class="agent-icon">📰</div>
-                        <h3>NEWS RESEARCHER</h3>
+                    <!-- Sentiment Analyst -->
+                    <div class="agent-card" id="card-sentiment_analyst">
+                        <div class="agent-header">
+                            <div class="agent-icon">💭</div>
+                            <h3>SENTIMENT</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="content-text markdown-body" id="text-sentiment_analyst">Waiting...</div>
+                        </div>
                     </div>
-                    <div class="agent-content">
-                        <div class="content-text markdown-body" id="text-news_researcher">Waiting for data...</div>
-                    </div>
-                </div>
 
-                <!-- Bull Reviewer -->
-                <div class="agent-card border-green" id="card-bull_reviewer">
-                    <div class="agent-header">
-                        <div class="agent-icon">📈</div>
-                        <h3>BULL REVIEWER</h3>
+                    <!-- News Analyst -->
+                    <div class="agent-card border-purple" id="card-news_analyst">
+                        <div class="agent-header">
+                            <div class="agent-icon">📰</div>
+                            <h3>NEWS 🆕</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="content-text markdown-body" id="text-news_analyst">Waiting...</div>
+                        </div>
                     </div>
-                    <div class="agent-content">
-                        <div class="content-text markdown-body" id="text-bull_reviewer">Waiting for analysis...</div>
-                    </div>
-                    <div class="agent-footer">
-                        <span class="score-label">SCORE</span>
-                        <span class="score-value text-green" id="score-bull_reviewer">--</span>
-                    </div>
-                </div>
 
-                <!-- Bear Reviewer -->
-                <div class="agent-card border-red" id="card-bear_reviewer">
-                    <div class="agent-header">
-                        <div class="agent-icon">📉</div>
-                        <h3>BEAR REVIEWER</h3>
-                    </div>
-                    <div class="agent-content">
-                        <div class="content-text markdown-body" id="text-bear_reviewer">Waiting for analysis...</div>
-                    </div>
-                    <div class="agent-footer">
-                        <span class="score-label">SCORE</span>
-                        <span class="score-value text-red" id="score-bear_reviewer">--</span>
+                    <!-- Technical Analyst -->
+                    <div class="agent-card" id="card-technical_analyst">
+                        <div class="agent-header">
+                            <div class="agent-icon">📈</div>
+                            <h3>TECHNICAL</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="content-text markdown-body" id="text-technical_analyst">Waiting...</div>
+                        </div>
+                        <div class="agent-footer">
+                            <span class="score-label">SCORE</span>
+                            <span class="score-value" id="score-technical_analyst">--</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Debate Section -->
-            <div id="debateSection" class="debate-section hidden">
-                <div class="debate-header">
-                    <h3>🗣️ DEBATE PROTOCOL ACTIVATED</h3>
-                    <div class="debate-round-badge" id="debateRoundInfo">ROUND 1/2</div>
+            <!-- Layer 2: Researcher Team -->
+            <div class="layer-section">
+                <div class="layer-header">
+                    <h2>🗣️ LAYER 2: RESEARCHER TEAM</h2>
+                    <p class="layer-desc">Bullish vs Bearish Debate</p>
                 </div>
-                <div id="debateContainer" class="debate-container">
-                    <!-- Dynamic Debate Items -->
+                <div class="agent-grid two-cols">
+                    <!-- Bullish Researcher -->
+                    <div class="agent-card border-green" id="card-bullish_researcher">
+                        <div class="agent-header">
+                            <div class="agent-icon">📈</div>
+                            <h3>BULLISH</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="content-text markdown-body" id="text-bullish_researcher">Waiting...</div>
+                        </div>
+                        <div class="agent-footer">
+                            <span class="score-label">SCORE</span>
+                            <span class="score-value text-green" id="score-bullish_researcher">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Bearish Researcher -->
+                    <div class="agent-card border-red" id="card-bearish_researcher">
+                        <div class="agent-header">
+                            <div class="agent-icon">📉</div>
+                            <h3>BEARISH</h3>
+                        </div>
+                        <div class="agent-content">
+                            <div class="content-text markdown-body" id="text-bearish_researcher">Waiting...</div>
+                        </div>
+                        <div class="agent-footer">
+                            <span class="score-label">SCORE</span>
+                            <span class="score-value text-red" id="score-bearish_researcher">--</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Debate Section -->
+                <div id="debateSection" class="debate-section hidden">
+                    <div class="debate-header">
+                        <h3>⚔️ DEBATE ACTIVATED</h3>
+                        <div id="debateInfo">Score Difference Triggered Debate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 3: Trader -->
+            <div class="layer-section">
+                <div class="layer-header">
+                    <h2>💼 LAYER 3: TRADER</h2>
+                    <p class="layer-desc">Trading Decision Making</p>
+                </div>
+                <div class="agent-card single-card" id="card-trader">
+                    <div class="agent-header">
+                        <div class="agent-icon">🎯</div>
+                        <h3>TRADER DECISION</h3>
+                    </div>
+                    <div class="agent-content">
+                        <div class="content-text markdown-body" id="text-trader">Waiting for analysis...</div>
+                    </div>
+                    <div class="agent-footer">
+                        <span class="score-label">RECOMMENDATION</span>
+                        <span class="score-value" id="trader-recommendation">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer 4: Risk & Portfolio -->
+            <div class="layer-section">
+                <div class="layer-header">
+                    <h2>⚖️ LAYER 4: RISK MANAGEMENT & PORTFOLIO</h2>
+                    <p class="layer-desc">Final Decision Framework</p>
+                </div>
+                <div class="risk-grid">
+                    <div class="risk-card" id="card-risk-aggressive">
+                        <div class="risk-header">🔥 AGGRESSIVE</div>
+                        <div class="risk-content" id="text-risk-aggressive">Waiting...</div>
+                    </div>
+                    <div class="risk-card" id="card-risk-neutral">
+                        <div class="risk-header">⚖️ NEUTRAL</div>
+                        <div class="risk-content" id="text-risk-neutral">Waiting...</div>
+                    </div>
+                    <div class="risk-card" id="card-risk-conservative">
+                        <div class="risk-header">🛡️ CONSERVATIVE</div>
+                        <div class="risk-content" id="text-risk-conservative">Waiting...</div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

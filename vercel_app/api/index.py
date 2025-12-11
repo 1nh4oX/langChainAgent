@@ -11,7 +11,10 @@ from pydantic import BaseModel
 # 添加 src 到路径以便导入
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.agent.multi_agent_system import MultiAgentTradingSystem, AgentRole, AgentOutput
+from src.agent.multi_agent_system_enhanced import (
+    EnhancedMultiAgentSystem,
+    AgentRole
+)
 
 app = FastAPI()
 
@@ -34,16 +37,17 @@ class AnalyzeRequest(BaseModel):
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "2.0.0-enhanced"}
 
 async def analysis_generator(request: AnalyzeRequest) -> AsyncGenerator[str, None]:
-    """生成器，流式返回分析进度"""
+    """生成器，流式返回增强版分析进度"""
     
     # 1. 初始化系统
     yield json.dumps({
         "type": "status", 
-        "message": "正在初始化多Agent系统...", 
-        "step": "init"
+        "message": "🚀 正在初始化增强版多Agent系统...", 
+        "step": "init",
+        "layer": 0
     }) + "\n"
     
     try:
@@ -52,199 +56,304 @@ async def analysis_generator(request: AnalyzeRequest) -> AsyncGenerator[str, Non
             os.environ["OPENAI_API_KEY"] = request.api_key
             os.environ["api-key"] = request.api_key
         
-        system = MultiAgentTradingSystem(
-            analysis_model=request.model,
-            analysis_api_key=request.api_key,
-            analysis_base_url=request.base_url,
-            use_same_model=True,
+        system = EnhancedMultiAgentSystem(
+            model=request.model,
+            api_key=request.api_key,
+            base_url=request.base_url,
             debate_threshold=request.debate_threshold,
             max_debate_rounds=request.max_rounds
         )
 
-        all_outputs = []
-        
-        # 2. 数据分析师
         yield json.dumps({
             "type": "status",
-            "message": "📊 数据分析师正在获取并分析市场数据...",
-            "step": "data_analyst",
-            "role": "data_analyst"
+            "message": "✅ 系统初始化完成",
+            "step": "initialized",
+            "layer": 0
         }) + "\n"
         
-        # 在线程池中运行以避免阻塞
-        data_analysis = await asyncio.to_thread(system._run_data_analyst, request.symbol)
-        all_outputs.append(data_analysis)
-        
+        # ========== Layer 1: Analyst Team ==========
         yield json.dumps({
-            "type": "agent_output",
-            "role": "data_analyst",
-            "data": {
-                "content": data_analysis.content,
-                "score": data_analysis.score,
-                "timestamp": data_analysis.timestamp
-            }
+            "type": "layer_start",
+            "layer": 1,
+            "name": "Analyst Team",
+            "message": "📊 第1层: 分析师团队并行分析"
         }) + "\n"
         
-        # 3. 新闻研究员
+        # Fundamentals Analyst
         yield json.dumps({
             "type": "status",
-            "message": "📰 新闻研究员正在搜索最新动态...",
-            "step": "news_researcher",
-            "role": "news_researcher"
+            "message": "💼 基本面分析师正在评估财务健康度...",
+            "step": "fundamentals_analyst",
+            "role": "fundamentals_analyst",
+            "layer": 1
         }) + "\n"
         
-        news_analysis = await asyncio.to_thread(
-            system._run_news_researcher, 
-            request.symbol, 
-            data_analysis.content
-        )
-        all_outputs.append(news_analysis)
-        
-        yield json.dumps({
-            "type": "agent_output",
-            "role": "news_researcher",
-            "data": {
-                "content": news_analysis.content,
-                "timestamp": news_analysis.timestamp
-            }
-        }) + "\n"
-        
-        # 4. 双评审
-        yield json.dumps({
-            "type": "status",
-            "message": "⚖️ 多空评审正在进行深度博弈...",
-            "step": "reviewers",
-            "role": "reviewers"
-        }) + "\n"
-        
-        bull_review, bear_review = await asyncio.to_thread(
-            system._run_reviewers,
+        fundamentals = await asyncio.to_thread(
+            system._run_fundamentals_analyst,
             request.symbol,
-            data_analysis.content,
-            news_analysis.content
+            verbose=False
         )
-        all_outputs.extend([bull_review, bear_review])
         
         yield json.dumps({
             "type": "agent_output",
-            "role": "bull_reviewer",
+            "role": "fundamentals_analyst",
+            "layer": 1,
             "data": {
-                "content": bull_review.content,
-                "score": bull_review.score,
-                "timestamp": bull_review.timestamp
+                "content": fundamentals.content,
+                "score": fundamentals.score,
+                "timestamp": fundamentals.timestamp
+            }
+        }) + "\n"
+        
+        # Sentiment Analyst
+        yield json.dumps({
+            "type": "status",
+            "message": "💭 情绪分析师正在追踪市场情绪...",
+            "step": "sentiment_analyst",
+            "role": "sentiment_analyst",
+            "layer": 1
+        }) + "\n"
+        
+        sentiment = await asyncio.to_thread(
+            system._run_sentiment_analyst,
+            request.symbol,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "agent_output",
+            "role": "sentiment_analyst",
+            "layer": 1,
+            "data": {
+                "content": sentiment.content,
+                "timestamp": sentiment.timestamp
+            }
+        }) + "\n"
+        
+        # News Analyst 🆕
+        yield json.dumps({
+            "type": "status",
+            "message": "📰 新闻分析师正在分析新闻和宏观经济...",
+            "step": "news_analyst",
+            "role": "news_analyst",
+            "layer": 1
+        }) + "\n"
+        
+        news = await asyncio.to_thread(
+            system._run_news_analyst,
+            request.symbol,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "agent_output",
+            "role": "news_analyst",
+            "layer": 1,
+            "data": {
+                "content": news.content,
+                "timestamp": news.timestamp
+            }
+        }) + "\n"
+        
+        # Technical Analyst
+        yield json.dumps({
+            "type": "status",
+            "message": "📈 技术分析师正在计算MACD和RSI...",
+            "step": "technical_analyst",
+            "role": "technical_analyst",
+            "layer": 1
+        }) + "\n"
+        
+        technical = await asyncio.to_thread(
+            system._run_technical_analyst,
+            request.symbol,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "agent_output",
+            "role": "technical_analyst",
+            "layer": 1,
+            "data": {
+                "content": technical.content,
+                "score": technical.score,
+                "timestamp": technical.timestamp
+            }
+        }) + "\n"
+        
+        # ========== Layer 2: Researcher Team ==========
+        yield json.dumps({
+            "type": "layer_start",
+            "layer": 2,
+            "name": "Researcher Team",
+            "message": "🗣️ 第2层: 研究员团队辩论"
+        }) + "\n"
+        
+        # 构建分析师报告
+        from src.agent.multi_agent_system_enhanced import AnalystTeamReport
+        analyst_team = AnalystTeamReport(
+            fundamentals=fundamentals,
+            sentiment=sentiment,
+            news=news,
+            technical=technical
+        )
+        
+        yield json.dumps({
+            "type": "status",
+            "message": "⚔️ 多空研究员正在辩论...",
+            "step": "researcher_debate",
+            "layer": 2
+        }) + "\n"
+        
+        researcher_debate = await asyncio.to_thread(
+            system._run_researcher_team,
+            request.symbol,
+            analyst_team,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "agent_output",
+            "role": "bullish_researcher",
+            "layer": 2,
+            "data": {
+                "content": researcher_debate.bullish.content,
+                "score": researcher_debate.bullish.score,
+                "timestamp": researcher_debate.bullish.timestamp
             }
         }) + "\n"
         
         yield json.dumps({
             "type": "agent_output",
-            "role": "bear_reviewer",
+            "role": "bearish_researcher",
+            "layer": 2,
             "data": {
-                "content": bear_review.content,
-                "score": bear_review.score,
-                "timestamp": bear_review.timestamp
+                "content": researcher_debate.bearish.content,
+                "score": researcher_debate.bearish.score,
+                "timestamp": researcher_debate.bearish.timestamp
             }
         }) + "\n"
         
-        # 5. 辩论判断
-        score_diff = abs(bull_review.score - bear_review.score)
-        debate_occurred = score_diff >= request.debate_threshold
-        debate_rounds = []
-        
-        if debate_occurred:
+        if researcher_debate.debate_occurred:
             yield json.dumps({
-                "type": "status",
-                "message": f"🗣️ 触发辩论机制 (分歧度 {score_diff:.1f})",
-                "step": "debate_start",
-                "role": "moderator"
-            }) + "\n"
-            
-            # 手动执行辩论轮次以支持流式输出
-            context = f"""【数据分析】{data_analysis.content}\n\n【新闻研究】{news_analysis.content}\n\n【多头观点】{bull_review.content}\n\n【空头观点】{bear_review.content}"""
-            
-            from src.agent.agent_prompts import get_prompt_by_role
-            from src.agent.multi_agent_system import DebateRound
-            from langchain_core.prompts import ChatPromptTemplate
-            
-            for round_num in range(1, request.max_rounds + 1):
-                yield json.dumps({
-                    "type": "status",
-                    "message": f"第 {round_num} 轮辩论进行中...",
-                    "step": f"debate_round_{round_num}",
-                    "role": "moderator"
-                }) + "\n"
-                
-                # 重新实现辩论逻辑以支持await
-                # 简化：直接调用内部逻辑，这里为了演示，假设我们可以在一次调用中完成一轮
-                # 实际上 system._run_debate 是一次性返回所有轮次
-                # 为了简单起见，这里我们直接调用 system._run_debate
-                # 更好的做法是重构 _run_debate 为生成器，但为了不破坏原有结构，我们这里一次性运行
-                # 或者：我们可以分步模拟。
-                # 鉴于时间，我们这里一次性运行辩论，这可能会在前端卡住一会儿。
-                # 优化：如果我们能用 to_thread 运行，就不会阻塞主循环，只是前端收不到中间进度。
-                
-                pass # 实际逻辑放在下面一次性调用
-            
-            debate_rounds = await asyncio.to_thread(
-                system._run_debate,
-                request.symbol,
-                data_analysis.content,
-                news_analysis.content,
-                bull_review,
-                bear_review,
-                verbose=False
-            )
-            
-            yield json.dumps({
-                "type": "debate_result",
+                "type": "debate_triggered",
                 "data": {
-                    "rounds": [
-                        {
-                            "round": r.round_number,
-                            "moderator": r.moderator_summary,
-                            "bull": r.bull_argument,
-                            "bear": r.bear_argument
-                        } for r in debate_rounds
-                    ]
+                    "score_diff": researcher_debate.score_diff,
+                    "message": f"🔥 触发辩论! (分歧度: {researcher_debate.score_diff:.1f})"
                 }
             }) + "\n"
-            
-        else:
-            yield json.dumps({
-                "type": "status",
-                "message": "✅ 评分接近，无需辩论，正在生成最终报告...",
-                "step": "no_debate"
-            }) + "\n"
-            
-        # 6. 最终报告
-        final_result = await asyncio.to_thread(
-            system._generate_final_report,
+        
+        # ========== Layer 3: Trader ==========
+        yield json.dumps({
+            "type": "layer_start",
+            "layer": 3,
+            "name": "Trader",
+            "message": "💼 第3层: 交易员决策"
+        }) + "\n"
+        
+        yield json.dumps({
+            "type": "status",
+            "message": "🎯 交易员正在制定交易策略...",
+            "step": "trader",
+            "layer": 3
+        }) + "\n"
+        
+        trader_decision = await asyncio.to_thread(
+            system._run_trader,
             request.symbol,
-            all_outputs,
-            debate_rounds,
-            debate_occurred,
+            analyst_team,
+            researcher_debate,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "agent_output",
+            "role": "trader",
+            "layer": 3,
+            "data": {
+                "content": trader_decision.decision.content,
+                "recommendation": trader_decision.recommendation,
+                "position": trader_decision.suggested_position,
+                "timestamp": trader_decision.decision.timestamp
+            }
+        }) + "\n"
+        
+        # ========== Layer 4: Risk + Portfolio ==========
+        yield json.dumps({
+            "type": "layer_start",
+            "layer": 4,
+            "name": "Risk Management + Portfolio Manager",
+            "message": "⚖️ 第4层: 风险评估与最终决策"
+        }) + "\n"
+        
+        yield json.dumps({
+            "type": "status",
+            "message": "🛡️ 风险管理团队正在评估...",
+            "step": "risk_assessment",
+            "layer": 4
+        }) + "\n"
+        
+        risk_assessment = await asyncio.to_thread(
+            system._run_risk_management,
+            trader_decision,
+            verbose=False
+        )
+        
+        yield json.dumps({
+            "type": "risk_assessment",
+            "data": {
+                "aggressive": risk_assessment.aggressive.content,
+                "neutral": risk_assessment.neutral.content,
+                "conservative": risk_assessment.conservative.content
+            }
+        }) + "\n"
+        
+        yield json.dumps({
+            "type": "status",
+            "message": "👔 投资组合经理正在做出最终决策...",
+            "step": "portfolio_manager",
+            "layer": 4
+        }) + "\n"
+        
+        final_decision = await asyncio.to_thread(
+            system._run_portfolio_manager,
+            request.symbol,
+            analyst_team,
+            researcher_debate,
+            trader_decision,
+            risk_assessment,
             verbose=False
         )
         
         yield json.dumps({
             "type": "final_result",
             "data": {
-                "recommendation": final_result.final_recommendation,
-                "confidence": final_result.confidence,
-                "brief": final_result.brief_analysis,
-                "scores": final_result.key_data
+                "recommendation": final_decision.recommendation,
+                "confidence": final_decision.confidence,
+                "content": final_decision.decision.content,
+                "position_suggestions": final_decision.position_suggestions,
+                "scores": {
+                    "fundamentals": fundamentals.score,
+                    "technical": technical.score,
+                    "bullish": researcher_debate.bullish.score,
+                    "bearish": researcher_debate.bearish.score,
+                    "score_diff": researcher_debate.score_diff
+                }
             }
         }) + "\n"
         
         yield json.dumps({
             "type": "status",
-            "message": "🎉 分析完成！",
+            "message": "🎉 增强版分析完成！",
             "step": "complete"
         }) + "\n"
 
     except Exception as e:
+        import traceback
         yield json.dumps({
             "type": "error",
-            "message": str(e)
+            "message": str(e),
+            "traceback": traceback.format_exc()
         }) + "\n"
 
 @app.post("/api/analyze")
@@ -262,7 +371,8 @@ if __name__ == "__main__":
     public_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "public")
     if os.path.exists(public_dir):
         app.mount("/", StaticFiles(directory=public_dir, html=True), name="public")
-        print(f"🌍 前端已挂载: http://localhost:8000")
+        print(f"🌍 增强版前端已挂载: http://localhost:8000")
+        print(f"🚀 使用4层Agent架构 (11个角色)")
         
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

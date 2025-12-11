@@ -16,7 +16,6 @@ const maxRoundsVal = document.getElementById('maxRoundsVal');
 
 // Event Listeners
 analyzeBtn.addEventListener('click', startAnalysis);
-
 thresholdInput.addEventListener('input', (e) => thresholdVal.textContent = e.target.value);
 maxRoundsInput.addEventListener('input', (e) => maxRoundsVal.textContent = e.target.value);
 
@@ -28,7 +27,7 @@ function toggleConfig() {
 async function startAnalysis() {
     const symbol = symbolInput.value.trim();
     if (!symbol || symbol.length < 6) {
-        alert('Please enter a valid stock symbol');
+        alert('Please enter a valid 6-digit stock symbol');
         return;
     }
 
@@ -37,12 +36,11 @@ async function startAnalysis() {
     document.querySelector('.hero').style.marginTop = '2rem';
     analyzeBtn.disabled = true;
     analyzeBtn.querySelector('.btn-text').textContent = 'ANALYZING...';
-    
-    // Reset cards
+
     resetCards();
-    
+
     statusSection.classList.remove('hidden');
-    updateStatus('INITIALIZING NEURAL NETWORKS...', 5);
+    updateStatus('🚀 INITIALIZING ENHANCED MULTI-AGENT SYSTEM...', 5);
 
     try {
         const response = await fetch(API_URL, {
@@ -74,14 +72,15 @@ async function startAnalysis() {
                         const data = JSON.parse(line);
                         handleStreamData(data);
                     } catch (e) {
-                        console.error('Error parsing JSON:', e);
+                        console.error('Error parsing JSON:', e, line);
                     }
                 }
             }
         }
     } catch (error) {
         console.error('Fetch error:', error);
-        updateStatus('SYSTEM ERROR: CONNECTION LOST', 0);
+        updateStatus('❌ SYSTEM ERROR: CONNECTION LOST', 0);
+        alert('Error: ' + error.message + '\n\nPlease ensure the server is running at http://localhost:8000');
     } finally {
         analyzeBtn.disabled = false;
         analyzeBtn.querySelector('.btn-text').textContent = 'INITIALIZE';
@@ -94,147 +93,247 @@ function handleStreamData(data) {
     switch (data.type) {
         case 'status':
             updateStatus(data.message.toUpperCase());
-            updateProgress(data.step);
+            updateProgress(data.step, data.layer);
+            break;
+
+        case 'layer_start':
+            updateStatus(`${data.message}`, null);
             break;
 
         case 'agent_output':
-            updateAgentCard(data.role, data.data);
+            updateAgentCard(data.role, data.data, data.layer);
             break;
 
-        case 'debate_result':
-            showDebate(data.data.rounds);
+        case 'debate_triggered':
+            showDebateTrigger(data.data);
+            break;
+
+        case 'risk_assessment':
+            updateRiskCards(data.data);
             break;
 
         case 'final_result':
             showFinalResult(data.data);
             break;
-            
+
         case 'error':
-            alert('Error: ' + data.message);
+            alert('❌ Error: ' + data.message);
+            console.error('Server error:', data);
             break;
     }
 }
 
 function updateStatus(text, progress = null) {
-    statusText.textContent = text;
-    // Animation effect for text change could be added here
+    statusText.innerHTML = text;
+    if (progress !== null) {
+        progressFill.style.width = `${progress}%`;
+    }
 }
 
-function updateProgress(step) {
-    const steps = {
+function updateProgress(step, layer) {
+    // Enhanced progress tracking for 4 layers
+    const progressMap = {
         'init': 5,
-        'data_analyst': 20,
-        'news_researcher': 40,
-        'reviewers': 60,
-        'debate_start': 75,
+        'initialized': 10,
+        // Layer 1 (10-35%)
+        'fundamentals_analyst': 15,
+        'sentiment_analyst': 20,
+        'news_analyst': 25,
+        'technical_analyst': 30,
+        // Layer 2 (35-55%)
+        'researcher_debate': 45,
+        // Layer 3 (55-75%)
+        'trader': 65,
+        // Layer 4 (75-95%)
+        'risk_assessment': 80,
+        'portfolio_manager': 90,
         'complete': 100
     };
-    
-    if (steps[step]) {
-        progressFill.style.width = `${steps[step]}%`;
-    }
-    
-    // If it's a debate round, increment slowly
-    if (String(step).startsWith('debate_round')) {
-        progressFill.style.width = '85%';
+
+    if (progressMap[step]) {
+        progressFill.style.width = `${progressMap[step]}%`;
+    } else if (layer) {
+        // Layer-based progress
+        const layerProgress = { 1: 15, 2: 40, 3: 65, 4: 85 };
+        if (layerProgress[layer]) {
+            progressFill.style.width = `${layerProgress[layer]}%`;
+        }
     }
 }
 
-function updateAgentCard(role, data) {
+function updateAgentCard(role, data, layer) {
     const cardId = `card-${role}`;
     const textId = `text-${role}`;
     const scoreId = `score-${role}`;
-    
-    // Handle Reviewers special aggregation logic if needed, 
-    // but here we map directly since backend sends distinct roles
-    
+
     const textEl = document.getElementById(textId);
+    const card = document.getElementById(cardId);
+
     if (textEl) {
         // Use marked to parse markdown
-        textEl.innerHTML = marked.parse(data.content);
-        
+        textEl.innerHTML = marked.parse(data.content || 'Processing...');
+
         // Remove loader if present
-        const card = document.getElementById(cardId);
-        const loader = card.querySelector('.loader-line');
-        if (loader) loader.style.display = 'none';
+        if (card) {
+            const loader = card.querySelector('.loader-line');
+            if (loader) loader.style.display = 'none';
+
+            // Add animation
+            card.style.animation = 'pulse 0.3s';
+            setTimeout(() => card.style.animation = '', 300);
+        }
     }
-    
+
     const scoreEl = document.getElementById(scoreId);
     if (scoreEl && data.score !== undefined) {
         scoreEl.textContent = data.score.toFixed(1);
+
+        // Color coding
+        const score = data.score;
+        if (score >= 7) scoreEl.style.color = '#4ade80';
+        else if (score >= 5) scoreEl.style.color = '#fbbf24';
+        else scoreEl.style.color = '#f87171';
+    }
+
+    // Handle trader recommendation
+    if (role === 'trader' && data.recommendation) {
+        const recEl = document.getElementById('trader-recommendation');
+        if (recEl) {
+            recEl.textContent = data.recommendation;
+            recEl.className = `score-value text-${getColorForVerdict(data.recommendation)}`;
+        }
     }
 }
 
-function showDebate(rounds) {
+function updateRiskCards(riskData) {
+    // Update risk assessment cards
+    const risks = {
+        'aggressive': riskData.aggressive,
+        'neutral': riskData.neutral,
+        'conservative': riskData.conservative
+    };
+
+    for (const [type, content] of Object.entries(risks)) {
+        const textEl = document.getElementById(`text-risk-${type}`);
+        if (textEl) {
+            // Extract key points from content
+            const summary = extractRiskSummary(content);
+            textEl.textContent = summary;
+        }
+    }
+}
+
+function extractRiskSummary(content) {
+    // Extract first 200 chars or first complete sentence
+    if (!content) return 'Processing...';
+    const lines = content.split('\n').filter(l => l.trim());
+    return lines.slice(0, 3).join(' ').substring(0, 200) + (content.length > 200 ? '...' : '');
+}
+
+function showDebateTrigger(data) {
     const section = document.getElementById('debateSection');
-    const container = document.getElementById('debateContainer');
+    const info = document.getElementById('debateInfo');
     section.classList.remove('hidden');
-    container.innerHTML = '';
-    
-    rounds.forEach(round => {
-        // Moderator context
-        const modItem = document.createElement('div');
-        modItem.className = 'debate-item moderator';
-        modItem.innerHTML = `<strong>MODERATOR (ROUND ${round.round}):</strong><br>${round.moderator}`;
-        container.appendChild(modItem);
-        
-        // Bull
-        const bullItem = document.createElement('div');
-        bullItem.className = 'debate-item bull';
-        bullItem.innerHTML = `<strong>BULL ARGUMENT:</strong><br>${round.bull}`;
-        container.appendChild(bullItem);
-        
-        // Bear
-        const bearItem = document.createElement('div');
-        bearItem.className = 'debate-item bear';
-        bearItem.innerHTML = `<strong>BEAR ARGUMENT:</strong><br>${round.bear}`;
-        container.appendChild(bearItem);
-    });
+    info.textContent = `Score Difference: ${data.score_diff.toFixed(1)} | ${data.message}`;
 }
 
 function showFinalResult(data) {
     const card = document.getElementById('finalResult');
     card.classList.remove('hidden');
-    
+
     // Animate transition
     card.style.opacity = '0';
     setTimeout(() => card.style.opacity = '1', 100);
-    
+
     document.getElementById('finalVerdict').textContent = data.recommendation;
     document.getElementById('finalVerdict').className = `verdict text-${getColorForVerdict(data.recommendation)}`;
-    
-    document.getElementById('confidenceLevel').textContent = `${data.confidence} CONFIDENCE`;
-    document.getElementById('finalDesc').textContent = data.brief;
-    
-    document.getElementById('finalDataScore').textContent = data.scores.data_analyst_score?.toFixed(1) || '-';
-    
-    const diff = data.scores.score_diff;
-    document.getElementById('finalConsensus').textContent = diff < 2 ? 'HIGH' : (diff < 4 ? 'MODERATE' : 'LOW');
+
+    document.getElementById('confidenceLevel').textContent = `${data.confidence.toUpperCase()} CONFIDENCE`;
+    document.getElementById('confidenceLevel').className = `confidence-badge badge-${data.confidence.toLowerCase()}`;
+
+    // Extract description from content
+    const desc = extractDescription(data.content);
+    document.getElementById('finalDesc').textContent = desc;
+
+    // Update scores
+    if (data.scores) {
+        document.getElementById('fundamentalsScore').textContent = data.scores.fundamentals?.toFixed(1) || '-';
+        document.getElementById('technicalScore').textContent = data.scores.technical?.toFixed(1) || '-';
+
+        const bullBear = `${data.scores.bullish?.toFixed(1) || '-'} / ${data.scores.bearish?.toFixed(1) || '-'}`;
+        document.getElementById('consensusScore').textContent = bullBear;
+    }
+
+    // Update position suggestions
+    if (data.position_suggestions) {
+        document.getElementById('aggressivePos').textContent = data.position_suggestions['激进型'] || data.position_suggestions['Aggressive'] || '-';
+        document.getElementById('neutralPos').textContent = data.position_suggestions['稳健型'] || data.position_suggestions['Neutral'] || '-';
+        document.getElementById('conservativePos').textContent = data.position_suggestions['保守型'] || data.position_suggestions['Conservative'] || '-';
+    }
+
+    // Scroll to result
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function extractDescription(content) {
+    if (!content) return 'Comprehensive analysis complete.';
+    // Extract first meaningful paragraph
+    const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+    return lines.slice(0, 2).join(' ').substring(0, 150) + '...';
 }
 
 function getColorForVerdict(verdict) {
-    if (verdict.includes('买入') || verdict.includes('Buy')) return 'green';
-    if (verdict.includes('卖出') || verdict.includes('Sell')) return 'red';
+    const v = verdict.toLowerCase();
+    if (v.includes('买入') || v.includes('buy')) return 'green';
+    if (v.includes('卖出') || v.includes('sell')) return 'red';
     return 'blue'; // Hold
 }
 
 function resetCards() {
-    ['data_analyst', 'news_researcher', 'bull_reviewer', 'bear_reviewer'].forEach(role => {
-        document.getElementById(`text-${role}`).textContent = 'Waiting for process...';
+    // Reset all agent cards
+    const roles = [
+        'fundamentals_analyst',
+        'sentiment_analyst',
+        'news_analyst',
+        'technical_analyst',
+        'bullish_researcher',
+        'bearish_researcher',
+        'trader'
+    ];
+
+    roles.forEach(role => {
+        const textEl = document.getElementById(`text-${role}`);
+        if (textEl) textEl.textContent = 'Waiting for initialization...';
+
         const scoreEl = document.getElementById(`score-${role}`);
         if (scoreEl) scoreEl.textContent = '--';
-        
-        // Show loader
-        const card = document.getElementById(`card-${role}`);
-        if (!card.querySelector('.loader-line')) {
-            const loader = document.createElement('div');
-            loader.className = 'loader-line';
-            card.querySelector('.agent-content').prepend(loader);
-        } else {
-             card.querySelector('.loader-line').style.display = 'block';
+
+        // Show loader for layer 1 agents
+        if (role.includes('analyst')) {
+            const card = document.getElementById(`card-${role}`);
+            if (card) {
+                let loader = card.querySelector('.loader-line');
+                if (!loader) {
+                    loader = document.createElement('div');
+                    loader.className = 'loader-line';
+                    card.querySelector('.agent-content').prepend(loader);
+                } else {
+                    loader.style.display = 'block';
+                }
+            }
         }
     });
-    
+
+    // Reset risk cards
+    ['aggressive', 'neutral', 'conservative'].forEach(type => {
+        const el = document.getElementById(`text-risk-${type}`);
+        if (el) el.textContent = 'Waiting...';
+    });
+
+    // Reset final result and debate
     document.getElementById('finalResult').classList.add('hidden');
     document.getElementById('debateSection').classList.add('hidden');
+
+    // Reset progress
+    progressFill.style.width = '0%';
 }
