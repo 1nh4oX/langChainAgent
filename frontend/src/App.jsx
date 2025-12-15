@@ -7,8 +7,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-// 后端API地址 - Railway部署的后端
-const BACKEND_URL = 'https://langchainagent-production.up.railway.app';
+// 后端API地址 - 局域网部署
+const BACKEND_URL = 'http://172.24.168.239:8000';
 
 // 简单的 Markdown 转 HTML 函数
 const simpleMarkdownToHtml = (text) => {
