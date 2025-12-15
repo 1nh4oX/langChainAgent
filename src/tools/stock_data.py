@@ -51,41 +51,53 @@ def get_stock_history(symbol: str) -> str:
     Example:
         >>> result = get_stock_history.invoke({"symbol": "600519"})
     """
-    # print(f"\n[工具调用] 正在从 AkShare 获取 {symbol} 的数据...")
+    import time
     
-    try:
-        # 设定开始时间为 1 个月前
-        start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y%m%d")
-        end_date = get_current_date()
+    # 重试机制
+    max_retries = 3
+    retry_delay = 1  # 初始延迟1秒
+    
+    for attempt in range(max_retries):
+        try:
+            # 设定开始时间为 1 个月前
+            start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y%m%d")
+            end_date = get_current_date()
 
-        # 调用 AkShare 接口：stock_zh_a_hist (A股日频率数据)
-        # period="daily" 日线
-        # adjust="qfq" 前复权 (分析价格趋势通常用前复权)
-        df = ak.stock_zh_a_hist(
-            symbol=symbol, 
-            period="daily", 
-            start_date=start_date, 
-            end_date=end_date, 
-            adjust="qfq"
-        )
-        
-        if df.empty:
-            return "未找到该股票数据，请确认代码是否正确。"
+            # 调用 AkShare 接口：stock_zh_a_hist (A股日频率数据)
+            # period="daily" 日线
+            # adjust="qfq" 前复权 (分析价格趋势通常用前复权)
+            df = ak.stock_zh_a_hist(
+                symbol=symbol, 
+                period="daily", 
+                start_date=start_date, 
+                end_date=end_date, 
+                adjust="qfq"
+            )
+            
+            if df.empty:
+                return f"未找到股票 {symbol} 的数据。\n\n可能原因:\n- 股票代码不正确\n- 该股票已退市\n- 数据源暂时不可用\n\n请确认股票代码格式为6位数字（如 600519）"
 
-        # 数据清洗
-        df = df[['日期', '开盘', '收盘', '最高', '最低', '成交量']]
-        
-        # 只取最近 10 天
-        recent_data = df.tail(10).copy()
-        
-        # 插入 id 列作为第一列
-        recent_data.insert(0, 'id', range(1, len(recent_data) + 1))
-        
-        # 转换为 Markdown
-        return recent_data.to_markdown(index=False)
+            # 数据清洗
+            df = df[['日期', '开盘', '收盘', '最高', '最低', '成交量']]
+            
+            # 只取最近 10 天
+            recent_data = df.tail(10).copy()
+            
+            # 插入 id 列作为第一列
+            recent_data.insert(0, 'id', range(1, len(recent_data) + 1))
+            
+            # 转换为 Markdown
+            return recent_data.to_markdown(index=False)
 
-    except Exception as e:
-        return f"获取数据失败: {str(e)}"
+        except Exception as e:
+            if attempt < max_retries - 1:
+                # 如果不是最后一次尝试，等待后重试
+                time.sleep(retry_delay)
+                retry_delay *= 2  # 指数退避
+                continue
+            else:
+                # 最后一次尝试失败，返回详细错误信息
+                return f"获取股票 {symbol} 数据失败（已重试{max_retries}次）\n\n错误信息: {str(e)}\n\n建议:\n- 检查网络连接\n- 确认股票代码格式正确（6位数字）\n- 稍后重试"
 
 
 @tool
@@ -103,34 +115,42 @@ def get_stock_news(symbol: str, max_news: int = 10) -> str:
     Example:
         >>> result = get_stock_news.invoke({"symbol": "600519", "max_news": 5})
     """
-    # print(f"\n[工具调用] 正在获取 {symbol} 的新闻资讯...")
+    import time
     
-    try:
-        # 使用 AkShare 获取个股新闻
-        df = ak.stock_news_em(symbol=symbol)
-        
-        if df.empty:
-            return "暂无该股票的新闻数据。"
-        
-        # 取最新的 max_news 条
-        recent_news = df.head(max_news).copy()
-        
-        # 格式化输出
-        news_list = []
-        for idx, row in recent_news.iterrows():
-            news_item = f"【{row.get('发布时间', 'N/A')}】{row.get('新闻标题', 'N/A')}\n来源: {row.get('新闻来源', 'N/A')}"
-            news_list.append(news_item)
-        
-        return "\n\n".join(news_list)
+    # 重试机制
+    max_retries = 2
     
-    except Exception as e:
-        return f"获取新闻失败: {str(e)}"
+    for attempt in range(max_retries):
+        try:
+            # 使用 AkShare 获取个股新闻
+            df = ak.stock_news_em(symbol=symbol)
+            
+            if df.empty:
+                return f"暂无股票 {symbol} 的新闻数据。\n\n可能原因:\n- 该股票近期没有相关新闻\n- 数据源暂时不可用\n- 股票代码可能不正确\n\n建议:\n- 访问东方财富网等财经网站查看新闻\n- 确认股票代码格式正确"
+            
+            # 取最新的 max_news 条
+            recent_news = df.head(max_news).copy()
+            
+            # 格式化输出
+            news_list = []
+            for idx, row in recent_news.iterrows():
+                news_item = f"【{row.get('发布时间', 'N/A')}】{row.get('新闻标题', 'N/A')}\n来源: {row.get('新闻来源', 'N/A')}"
+                news_list.append(news_item)
+            
+            return "\n\n".join(news_list)
+        
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            else:
+                return f"获取股票 {symbol} 新闻失败（已重试{max_retries}次）\n\n错误: {str(e)}\n\n建议:\n- 检查网络连接\n- 访问财经网站手动查看新闻\n- 稍后重试"
 
 
 @tool
 def get_stock_technical_indicators(symbol: str) -> str:
     """
-    计算股票的技术指标（MA5, MA10, MA20 均线，涨跌幅等）。
+    计算股票的技术指标（MA5, MA10, MA20 均线, MACD, RSI等）。
     
     Args:
         symbol: 股票代码（6位数字）
@@ -141,50 +161,155 @@ def get_stock_technical_indicators(symbol: str) -> str:
     Example:
         >>> result = get_stock_technical_indicators.invoke({"symbol": "600519"})
     """
-    # print(f"\n[工具调用] 正在计算 {symbol} 的技术指标...")
-    
     try:
-        start_date, end_date = get_date_range(60)
-        df = ak.stock_zh_a_hist(
-            symbol=symbol, 
-            period="daily", 
-            start_date=start_date, 
-            end_date=end_date, 
-            adjust="qfq"
-        )
+        # 获取历史数据
+        start_date, end_date = get_date_range(90)  # 获取90天数据用于计算指标
+        df = ak.stock_zh_a_hist(symbol=symbol, start_date=start_date, end_date=end_date, adjust="qfq")
         
-        if df.empty or len(df) < 20:
-            return "数据不足，无法计算技术指标。"
+        if df.empty:
+            return f"无法获取股票 {symbol} 的技术指标数据"
         
         # 计算均线
         df['MA5'] = df['收盘'].rolling(window=5).mean()
         df['MA10'] = df['收盘'].rolling(window=10).mean()
         df['MA20'] = df['收盘'].rolling(window=20).mean()
+        df['MA60'] = df['收盘'].rolling(window=60).mean()
         
-        # 获取最新数据
+        # 计算MACD指标
+        # 12日EMA
+        df['EMA12'] = df['收盘'].ewm(span=12, adjust=False).mean()
+        # 26日EMA
+        df['EMA26'] = df['收盘'].ewm(span=26, adjust=False).mean()
+        # DIF = EMA12 - EMA26
+        df['DIF'] = df['EMA12'] - df['EMA26']
+        # DEA = DIF的9日EMA
+        df['DEA'] = df['DIF'].ewm(span=9, adjust=False).mean()
+        # MACD柱 = (DIF - DEA) * 2
+        df['MACD'] = (df['DIF'] - df['DEA']) * 2
+        
+        # 计算RSI指标 (14日)
+        delta = df['收盘'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df['RSI'] = 100 - (100 / (1 + rs))
+        
         latest = df.iloc[-1]
         prev = df.iloc[-2]
         
-        # 计算涨跌幅
-        change_pct = ((latest['收盘'] - prev['收盘']) / prev['收盘']) * 100
+        result = f"【股票 {symbol} 技术指标分析】\n\n"
         
-        # 判断均线趋势
-        ma_trend = "多头排列" if latest['MA5'] > latest['MA10'] > latest['MA20'] else \
-                   "空头排列" if latest['MA5'] < latest['MA10'] < latest['MA20'] else "震荡"
+        # 均线系统
+        result += "【均线系统】\n"
+        result += f"当前价格: {latest['收盘']:.2f}元\n"
+        result += f"MA5:  {latest['MA5']:.2f}元\n"
+        result += f"MA10: {latest['MA10']:.2f}元\n"
+        result += f"MA20: {latest['MA20']:.2f}元\n"
+        result += f"MA60: {latest['MA60']:.2f}元\n\n"
         
-        result = f"""技术指标分析 ({latest['日期']}):
-- 最新收盘价: {latest['收盘']:.2f} 元
-- 涨跌幅: {change_pct:+.2f}%
-- MA5: {latest['MA5']:.2f} 元
-- MA10: {latest['MA10']:.2f} 元  
-- MA20: {latest['MA20']:.2f} 元
-- 均线趋势: {ma_trend}
-- 成交量: {latest['成交量']} 手
-"""
+        # 均线形态判断
+        result += "【均线形态】\n"
+        if latest['MA5'] > latest['MA10'] > latest['MA20']:
+            result += "✓ 多头排列 (短期均线在上，趋势向上)\n"
+            ma_signal = "看多"
+        elif latest['MA5'] < latest['MA10'] < latest['MA20']:
+            result += "✗ 空头排列 (短期均线在下，趋势向下)\n"
+            ma_signal = "看空"
+        else:
+            result += "○ 均线纠缠 (方向不明确)\n"
+            ma_signal = "观望"
+        
+        # 价格与均线关系
+        if latest['收盘'] > latest['MA5']:
+            result += "• 价格在MA5上方\n"
+        else:
+            result += "• 价格在MA5下方\n"
+        
+        result += "\n"
+        
+        # MACD指标
+        result += "【MACD指标】\n"
+        result += f"DIF:  {latest['DIF']:.3f}\n"
+        result += f"DEA:  {latest['DEA']:.3f}\n"
+        result += f"MACD: {latest['MACD']:.3f}\n\n"
+        
+        # MACD信号判断
+        result += "【MACD信号】\n"
+        if latest['DIF'] > latest['DEA'] and prev['DIF'] <= prev['DEA']:
+            result += "🚀 金叉 (DIF上穿DEA，买入信号)\n"
+            macd_signal = "强烈看多"
+        elif latest['DIF'] < latest['DEA'] and prev['DIF'] >= prev['DEA']:
+            result += "⚠️ 死叉 (DIF下穿DEA，卖出信号)\n"
+            macd_signal = "看空"
+        elif latest['DIF'] > latest['DEA']:
+            result += "✓ DIF在DEA上方 (多头)\n"
+            macd_signal = "看多"
+        else:
+            result += "✗ DIF在DEA下方 (空头)\n"
+            macd_signal = "看空"
+        
+        if latest['MACD'] > 0:
+            result += "• MACD柱为正 (动能向上)\n"
+        else:
+            result += "• MACD柱为负 (动能向下)\n"
+        
+        result += "\n"
+        
+        # RSI指标
+        result += "【RSI指标 (14日)】\n"
+        result += f"当前RSI: {latest['RSI']:.2f}\n\n"
+        
+        # RSI判断
+        result += "【RSI信号】\n"
+        if latest['RSI'] > 70:
+            result += "⚠️ 超买区域 (RSI>70，可能面临回调)\n"
+            rsi_signal = "超买警告"
+        elif latest['RSI'] > 50:
+            result += "✓ 强势区域 (RSI>50，多方占优)\n"
+            rsi_signal = "偏多"
+        elif latest['RSI'] > 30:
+            result += "○ 弱势区域 (RSI<50，空方占优)\n"
+            rsi_signal = "偏空"
+        else:
+            result += "💡 超卖区域 (RSI<30，可能存在反弹机会)\n"
+            rsi_signal = "超卖机会"
+        
+        result += "\n"
+        
+        # 综合技术评分
+        result += "【综合技术信号】\n"
+        
+        signals = {
+            '均线': ma_signal,
+            'MACD': macd_signal,
+            'RSI': rsi_signal
+        }
+        
+        for indicator, signal in signals.items():
+            result += f"• {indicator}: {signal}\n"
+        
+        # 简单的评分系统
+        score = 0
+        if '多' in ma_signal:
+            score += 3
+        if '多' in macd_signal:
+            score += 3
+        if '多' in rsi_signal or '机会' in rsi_signal:
+            score += 2
+        
+        result += f"\n技术面评分: {score}/8分\n"
+        
+        if score >= 6:
+            result += "综合判断: 技术面看多 📈\n"
+        elif score >= 3:
+            result += "综合判断: 技术面中性 ○\n"
+        else:
+            result += "综合判断: 技术面看空 📉\n"
+        
         return result
         
     except Exception as e:
-        return f"计算技术指标失败: {str(e)}"
+        return f"技术指标计算失败: {str(e)}"
 
 
 @tool

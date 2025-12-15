@@ -55,6 +55,7 @@ data/processed/*
 *.xlsx
 *.xls
 *.json
+!vercel.json
 
 # Logs
 *.log

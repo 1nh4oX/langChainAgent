@@ -1,260 +1,338 @@
-# 🤖 Stock Analysis Agent
+# 🤖 AI多Agent股票交易分析系统 (增强版)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/LangChain-0.1+-green.svg" alt="LangChain">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
-  <img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status">
-</p>
+> 基于LangChain和多Agent协作的智能股票分析系统，采用4层11个Agent架构进行全方位分析
 
-基于 LangChain 的智能 A 股股票分析系统，支持历史数据查询、新闻资讯获取、技术指标分析等多项功能。
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
+[![LangChain](https://img.shields.io/badge/LangChain-Latest-green.svg)](https://github.com/langchain-ai/langchain)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## ✨ 核心功能
+## 🌟 项目简介
 
-- 📊 **历史行情查询** - 获取股票历史价格、成交量数据
-- 📰 **新闻资讯采集** - 实时获取股票相关新闻报道
-- 📈 **技术指标分析** - 计算MA5/MA10/MA20均线、涨跌幅等
-- 🏢 **行业对比分析** - 查询基本面信息、行业地位、估值水平
-- 🎯 **综合智能分析** - 多维度整合分析，提供投资参考
+这是一个创新的股票分析系统，利用多个AI Agent协同工作，从不同维度分析股票投资价值。系统采用**4层架构**，包含**11个专业Agent角色**，能够提供从基本面、技术面、情绪面到新闻面的全方位分析。
 
-## 📁 项目结构
+### ✨ 核心特性
+
+- 🧠 **4层Agent架构**: 分析师团队 → 研究员辩论 → 交易决策 → 风险管理
+- 🆕 **11个专业角色**: 包括基本面、情绪、新闻、技术分析师等
+- � **完整新闻分析**: 新闻情感分析、宏观经济指标、事件影响评估
+- 🗣️ **智能辩论机制**: 多空双方自动辩论，评分差异触发深度讨论
+- ⚖️ **多视角风险评估**: 激进、中立、保守三种投资风格的风险评估
+- � **现代化Web界面**: 赛博朋克风格的HTML前端，可部署到Vercel
+- 📊 **实时流式输出**: 分析过程可视化，实时展示Agent工作状态
+
+---
+
+## 🏗️ 系统架构
 
 ```
-stock-analysis-agent/
-├── src/                      # 源代码
-│   ├── agent/                # Agent 核心模块
-│   ├── tools/                # 工具模块（5个分析工具）
-│   ├── config/               # 配置管理
-│   └── utils/                # 工具函数
-├── scripts/                  # 脚本工具
-├── tests/                    # 测试代码
-├── data/                     # 数据目录
-├── docs/                     # 文档
-├── examples/                 # 示例代码
-├── ui/                       # UI界面（预留）
-├── app.py                    # 主程序入口
-├── requirements.txt          # 依赖配置
-└── README.md                 # 本文件
+📊 Layer 1: Analyst Team (并行分析)
+   ├─ 💼 Fundamentals Analyst  - 财务分析、估值评估
+   ├─ 💭 Sentiment Analyst     - 社交情绪、市场情绪
+   ├─ 📰 News Analyst 🆕       - 新闻情感、宏观经济
+   └─ 📈 Technical Analyst     - MACD、RSI、均线系统
+              ↓
+🗣️ Layer 2: Researcher Team (辩论机制)
+   ├─ 📈 Bullish Researcher    - 看涨论证
+   ├─ 📉 Bearish Researcher    - 看跌论证
+   └─ ⚔️ Debate (评分差异>=阈值时触发)
+              ↓
+💼 Layer 3: Trader (交易决策)
+   └─ 🎯 Trading Decision      - 买入/持有/卖出 + 仓位建议
+              ↓
+⚖️ Layer 4: Risk Management + Portfolio Manager
+   ├─ 🔥 Aggressive Risk       - 激进派评估
+   ├─ ⚖️ Neutral Risk          - 中立派评估
+   ├─ 🛡️ Conservative Risk     - 保守派评估
+   └─ 👔 Portfolio Manager     - 最终决策
 ```
+
+---
 
 ## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 环境准备
 
+**系统要求:**
+- Python 3.9+
+- pip 或 conda
+
+**克隆项目:**
 ```bash
+git clone https://github.com/yourusername/langChainAgent.git
+cd langChainAgent
+```
+
+**安装依赖:**
+```bash
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 安装依赖
 pip install -r requirements.txt
 ```
 
-### 2. 配置 API
-
-复制 `.env.example` 为 `.env` 并填入你的 API 密钥：
-
+**配置API密钥:**
 ```bash
+# 创建.env文件
 cp .env.example .env
+
+# 编辑.env文件，添加你的API密钥
+# api-key=your_api_key_here
+# base-url=https://api.siliconflow.cn/v1
 ```
 
-编辑 `.env` 文件：
+### 2. 启动方式
 
-```env
-api-key=your-api-key-here
-base-url=https://api.siliconflow.cn/v1
-model=Qwen/Qwen2.5-7B-Instruct
-```
-
-**免费 API 推荐：**
-- [硅基流动](https://siliconflow.cn) - 免费 2000万 tokens ⭐
-- [智谱AI](https://open.bigmodel.cn) - 免费 1000万 tokens
-- [月之暗面](https://platform.moonshot.cn) - 少量免费额度
-
-### 3. 运行程序
+#### 方式一：命令行版 (CLI)
 
 ```bash
-# 方式1: Web UI - 英文版（推荐，零编码问题）⭐
-streamlit run ui/streamlit_app.py
+source venv/bin/activate
+python app_multi_agent_enhanced.py
 
-# 方式1b: Web UI - 中文版（如果需要中文界面）
-streamlit run ui/streamlit_app_cn.py
+# 或直接分析指定股票
+python app_multi_agent_enhanced.py --symbol 600519
 
-# 方式2: 命令行交互
-python app.py
-
-# 方式3: 采集新闻数据
-python scripts/collect_news.py
-
-# 方式4: 运行示例
-python examples/basic_usage.py
+# 调整辩论阈值
+python app_multi_agent_enhanced.py --symbol 600519 --threshold 2.0 --max-rounds 3
 ```
+
+#### 方式二：Web界面
+
+**本地测试:**
+```bash
+# 启动后端
+cd api
+source ../venv/bin/activate
+python main.py
+```
+
+然后访问: http://localhost:8000
+
+**部署到生产环境:**
+- 后端部署到Render: 参考 [RENDER_DEPLOY.md](RENDER_DEPLOY.md)
+- 前端部署到Vercel: 参考 [FRONTEND_VERCEL.md](FRONTEND_VERCEL.md)
+
+---
 
 ## 📖 使用示例
 
-### 基础使用
-
-```python
-from src.agent import StockAnalysisAgent
-
-# 初始化 Agent
-agent = StockAnalysisAgent()
-
-# 运行查询
-result = agent.run("分析一下贵州茅台（600519）的最近走势")
-
-# 输出结果
-print(result['output'])
-print(f"迭代次数: {result['iterations']}")
-```
-
-### 添加自定义工具
-
-```python
-from langchain_core.tools import tool
-from src.agent import StockAnalysisAgent
-
-# 定义自定义工具
-@tool
-def my_custom_tool(param: str) -> str:
-    """工具描述"""
-    return "result"
-
-# 添加到 Agent
-agent = StockAnalysisAgent()
-agent.add_tool(my_custom_tool)
-```
-
-### 批量分析
-
-```python
-from src.agent import StockAnalysisAgent
-
-agent = StockAnalysisAgent()
-
-stocks = ["600519", "000001", "600036"]
-for stock in stocks:
-    result = agent.run(f"分析股票代码 {stock}")
-    print(f"\n{stock} 分析结果:")
-    print(result['output'])
-```
-
-## 🛠️ 开发指南
-
-### 添加新工具
-
-1. 在 `src/tools/` 创建新的工具文件
-2. 使用 `@tool` 装饰器定义工具
-3. 在 `src/tools/__init__.py` 导出工具
-4. 在 Agent 中注册工具
-
-示例：
-
-```python
-# src/tools/my_tools.py
-from langchain_core.tools import tool
-
-@tool
-def get_financial_report(symbol: str) -> str:
-    """获取财务报表"""
-    # 实现逻辑
-    return "财务数据"
-```
-
-### 运行测试
+### CLI示例
 
 ```bash
-# 运行所有测试
-pytest tests/
+# 分析贵州茅台 (600519)
+python app_multi_agent_enhanced.py --symbol 600519
 
-# 运行特定测试
-pytest tests/test_agent.py
+# 输出示例:
+================================================================================
+           🚀 增强版多Agent股票交易分析系统
+================================================================================
+
+系统架构 (4层):
+  📊 第1层: 分析师团队
+      1️⃣  基本面分析师 - 财务健康度、估值分析
+      2️⃣  情绪分析师 - 社交媒体情绪、市场情绪
+      3️⃣  新闻分析师 - 新闻事件、宏观经济 🆕
+      4️⃣  技术分析师 - MACD、RSI、均线系统
+  ...
 ```
 
-## 🎨 Web UI 界面
+### API调用示例
 
-### 现代化 Streamlit UI ✨
+```python
+from src.agent.multi_agent_system_enhanced import EnhancedMultiAgentSystem
 
-我们提供了一个美观的 Web 界面，设计灵感来自 Kaggle、X (Twitter)、Threads：
+# 初始化系统
+system = EnhancedMultiAgentSystem(
+    model="Qwen/Qwen2.5-7B-Instruct",
+    api_key="your_api_key",
+    debate_threshold=3.0
+)
 
-**特点：**
-- 🎨 现代卡片式设计，紫色渐变主题
-- 📱 响应式布局，完美适配各种屏幕
-- ⚡ 流畅动画，优雅的交互体验
-- 📊 实时指标展示，历史记录管理
-- ⚙️ 灵活配置，支持参数调整
+# 运行分析
+result = system.run_analysis("600519", verbose=True)
 
-**启动方式：**
+# 访问结果
+print(f"最终建议: {result.final_decision.recommendation}")
+print(f"信心水平: {result.final_decision.confidence}")
+print(f"仓位建议: {result.final_decision.position_suggestions}")
+```
+
+---
+
+## 🛠️ 技术栈
+
+| 技术 | 用途 |
+|------|------|
+| **LangChain** | Agent框架和工具编排 |
+| **LangChain-OpenAI** | LLM接口集成 |
+| **AkShare** | A股数据获取 |
+| **FastAPI** | Web API服务 |
+| **HTML/CSS/JS** | 现代化前端界面 |
+| **Uvicorn** | ASGI服务器 |
+
+---
+
+## 📊 分析工具
+
+### 技术分析工具
+- `get_stock_history` - 历史行情数据
+- `get_stock_technical_indicators` - 技术指标 (MA, MACD, RSI)
+- `get_industry_comparison` - 行业对比
+
+### 基本面分析工具 🆕
+- `get_company_financials` - 公司财务数据
+- `calculate_intrinsic_value` - 内在价值评估
+- `get_performance_metrics` - 业绩指标
+- `identify_red_flags` - 财务风险识别
+
+### 情绪分析工具 🆕
+- `analyze_social_media_sentiment` - 社交媒体情绪
+- `get_public_sentiment_score` - 公众情绪评分
+- `track_market_mood` - 市场情绪追踪
+
+### 新闻分析工具 🆕
+- `analyze_news_sentiment` - 新闻情感分析
+- `get_macroeconomic_indicators` - 宏观经济指标
+- `assess_event_impact` - 事件影响评估
+- `get_global_market_news` - 全球市场新闻
+
+---
+
+## 📂 项目结构
+
+```
+langChainAgent/
+├── frontend/                           # React前端（部署到Vercel）
+│   ├── src/
+│   │   ├── App.jsx                    # 主应用组件
+│   │   ├── main.jsx                   # 入口文件
+│   │   └── index.css                  # 全局样式
+│   ├── public/                        # 静态资源
+│   ├── index.html                     # HTML模板
+│   └── vite.config.js                 # Vite配置
+│
+├── api/                                # FastAPI后端入口
+│   └── main.py                        # Render部署入口（4层11个Agent）
+│
+├── src/
+│   ├── agent/
+│   │   ├── multi_agent_system_enhanced.py  # 4层11个Agent系统实现
+│   │   └── agent_prompts_enhanced.py       # 增强版Agent提示词
+│   └── tools/
+│       ├── news_analysis_tools.py          # 新闻分析工具
+│       ├── sentiment_tools.py              # 情绪分析工具
+│       ├── fundamentals_tools.py           # 基本面分析工具
+│       └── stock_data.py                   # 技术分析工具
+│
+├── app_multi_agent_enhanced.py         # CLI测试入口
+├── render.yaml                         # Render一键部署配置
+├── vercel.json                         # Vercel部署配置
+├── requirements.txt                    # Python依赖
+├── .env.example                        # 环境变量示例
+│
+└── 文档/
+    ├── README.md                       # 项目说明
+    ├── RENDER_DEPLOY.md                # Render后端部署指南
+    ├── FRONTEND_VERCEL.md              # Vercel前端部署指南
+    └── LOCAL_TEST_GUIDE.md             # 本地测试指南
+
+```
+
+---
+
+## � 版本对比
+
+| 特性 | 经典版 | 增强版 🆕 |
+|------|--------|----------|
+| Agent数量 | 5个 | **11个** |
+| 架构层级 | 扁平 | **4层** |
+| News Analyst | 基础 | **完整实现** |
+| 风险评估 | 无 | **3个视角** |
+| 技术指标 | MA均线 | **MA+MACD+RSI** |
+| 分析维度 | 2维 | **4维** |
+| 分析时间 | ~30秒 | ~1-2分钟 |
+| 适用场景 | 快速决策 | 重要投资决策 |
+
+---
+
+## ⚙️ 配置选项
+
+### 命令行参数
 
 ```bash
-# 本地运行
-streamlit run ui/streamlit_app.py
-
-# 或使用启动脚本
-./run_ui.sh
+python app_multi_agent_enhanced.py \
+  --symbol 600519 \              # 股票代码
+  --threshold 3.0 \              # 辩论触发阈值
+  --max-rounds 2 \               # 最大辩论轮次
+  --no-verbose                   # 静默模式
 ```
 
-**访问地址：** http://localhost:8501
+### 环境变量
 
-**在线部署：** 查看 [DEPLOY_STREAMLIT_CLOUD.md](DEPLOY_STREAMLIT_CLOUD.md) 一键部署到 Streamlit Cloud 获得公开访问链接
+```bash
+# .env文件
+api-key=your_silicon_flow_api_key
+base-url=https://api.siliconflow.cn/v1
+```
 
-详见 [ui/README.md](ui/README.md) 了解更多
+---
 
-### 未来规划
+## 📚 相关文档
 
-- [ ] **暗色主题** - 支持主题切换
-- [ ] **数据可视化** - K线图、指标图表
-- [ ] **Flask API** - RESTful API 服务
-- [ ] **导出功能** - PDF/Word 报告导出
+- [快速开始指南](file:///Users/haoyin/.gemini/antigravity/brain/6f4e44d9-e910-42b0-862d-c121f1d16ebf/ENHANCED_QUICK_START.md)
+- [Vercel部署指南](file:///Users/haoyin/.gemini/antigravity/brain/6f4e44d9-e910-42b0-862d-c121f1d16ebf/VERCEL_DEPLOYMENT.md)
+- [系统架构详解](file:///Users/haoyin/.gemini/antigravity/brain/6f4e44d9-e910-42b0-862d-c121f1d16ebf/walkthrough.md)
+
+---
+
+## ⚠️ 免责声明
+
+**本系统仅用于教育和研究目的，不构成任何投资建议。**
+
+- 📊 分析结果基于历史数据和AI模型推理
+- ⚡ 市场瞬息万变，过往表现不代表未来
+- 💰 股市有风险，投资需谨慎
+- 🎯 请独立思考，理性决策
+
+---
 
 ## 🤝 贡献指南
 
-我们欢迎所有形式的贡献！详见 [CONTRIBUTING.md](CONTRIBUTING.md)
+欢迎贡献！请遵循以下步骤：
 
-### 贡献流程
-
-1. Fork 项目
+1. Fork项目
 2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+5. 开启Pull Request
 
-## 📝 文档
-
-- [API 文档](docs/API.md) - 完整的 API 说明
-- [项目结构](docs/PROJECT_STRUCTURE.md) - 目录结构和模块职责
-- [更新日志](docs/CHANGELOG.md) - 版本更新历史
-- [迁移指南](MIGRATION_GUIDE.md) - 新旧版本对比
-
-## 📊 工具列表
-
-| 工具 | 功能 | 数据源 |
-|------|------|--------|
-| `get_stock_history` | 获取历史行情 | AkShare |
-| `get_stock_news` | 获取新闻资讯 | AkShare |
-| `get_stock_technical_indicators` | 计算技术指标 | AkShare |
-| `get_industry_comparison` | 行业对比 | AkShare |
-| `analyze_stock_comprehensive` | 综合分析 | AkShare |
+---
 
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
 
-## ⚠️ 免责声明
-
-本系统仅用于学习和研究目的，不构成任何投资建议。股市有风险，投资需谨慎。
+---
 
 ## 🙏 致谢
 
-- [LangChain](https://github.com/langchain-ai/langchain) - Agent 框架
+- [LangChain](https://github.com/langchain-ai/langchain) - Agent框架
 - [AkShare](https://github.com/akfamily/akshare) - 金融数据接口
-- [OpenAI](https://openai.com/) - GPT 模型
-- 所有贡献者
-
-## 📮 联系方式
-
-- 项目主页: https://github.com/yourusername/stock-analysis-agent
-- Issue 追踪: https://github.com/yourusername/stock-analysis-agent/issues
-
-## ⭐ Star History
-
-如果这个项目对你有帮助，请给我们一个 Star ⭐
+- [FastAPI](https://fastapi.tiangolo.com/) - Web框架
+- [Vercel](https://vercel.com/) - 部署平台
 
 ---
 
-<p align="center">Made with ❤️ by Stock Analysis Agent Team</p>
+## 📮 联系方式
+
+- 项目主页: https://github.com/yourusername/langChainAgent
+- Issue追踪: https://github.com/yourusername/langChainAgent/issues
+- 讨论区: https://github.com/yourusername/langChainAgent/discussions
+
+---
+
+<p align="center">
+  <strong>Made with ❤️ using LangChain & Multi-Agent AI</strong><br>
+  如果这个项目对你有帮助，请给一个 ⭐ Star!
+</p>
