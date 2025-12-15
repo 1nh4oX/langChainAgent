@@ -134,17 +134,42 @@ const markdownComponents = {
   h1: ({ node, ...props }) => <h1 className="font-bold text-xl mt-4 mb-2 text-gray-900" {...props} />,
   h2: ({ node, ...props }) => <h2 className="font-semibold text-lg mt-4 mb-2 text-gray-900" {...props} />,
   h3: ({ node, ...props }) => <h3 className="font-medium text-base mt-3 mb-1 text-gray-900" {...props} />,
+  h4: ({ node, ...props }) => <h4 className="font-medium text-sm mt-2 mb-1 text-gray-800" {...props} />,
   p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
   strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
   em: ({ node, ...props }) => <em className="italic" {...props} />,
   ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
   ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
   li: ({ node, ...props }) => <li className="ml-2" {...props} />,
-  code: ({ node, inline, ...props }) =>
-    inline ?
-      <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono" {...props} /> :
-      <code className="block bg-gray-100 p-3 rounded-lg text-sm font-mono overflow-x-auto my-2" {...props} />,
+  // 代码块：直接显示预格式化内容，不用代码样式
+  code: ({ node, inline, children, ...props }) => {
+    if (inline) {
+      return <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm" {...props}>{children}</code>;
+    }
+    // 块级代码：当作预格式化文本，保留换行
+    return <pre className="whitespace-pre-wrap text-sm leading-relaxed" {...props}>{children}</pre>;
+  },
+  // pre 标签：直接渲染子元素，不添加额外样式
+  pre: ({ node, children, ...props }) => <>{children}</>,
   blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />,
+};
+
+// 预处理LLM输出内容，移除代码块包裹，转换中文括号为加粗格式
+const cleanMarkdownContent = (content) => {
+  if (!content || typeof content !== 'string') return content;
+
+  // 移除开头和结尾的 ``` 代码块标记
+  let cleaned = content.trim();
+
+  // 移除开头的 ``` 或 ```markdown 等
+  cleaned = cleaned.replace(/^```[\w]*\n?/gm, '');
+  // 移除结尾的 ```
+  cleaned = cleaned.replace(/\n?```$/gm, '');
+
+  // 将【标题】格式转换为 **标题** 格式，使其更醒目
+  cleaned = cleaned.replace(/【([^】]+)】/g, '**$1**');
+
+  return cleaned.trim();
 };
 
 // --- Custom Hooks ---
@@ -173,25 +198,28 @@ const useCountUp = (end, duration = 1500, start = 0) => {
 const TypewriterText = ({ text, targetDuration = 2500, className }) => {
   const [displayedText, setDisplayedText] = useState("");
 
+  // 预处理内容，移除代码块包裹
+  const cleanedText = cleanMarkdownContent(text);
+
   useEffect(() => {
     setDisplayedText("");
-    if (!text || text.length === 0) return;
+    if (!cleanedText || cleanedText.length === 0) return;
 
     // 根据文本长度动态计算速度，确保在目标时间内完成
     // 最小速度 5ms（快），最大速度 50ms（慢）
-    const calculatedSpeed = Math.max(5, Math.min(50, targetDuration / text.length));
+    const calculatedSpeed = Math.max(5, Math.min(50, targetDuration / cleanedText.length));
 
     let i = 0;
     const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(i));
+      if (i < cleanedText.length) {
+        setDisplayedText((prev) => prev + cleanedText.charAt(i));
         i++;
       } else {
         clearInterval(timer);
       }
     }, calculatedSpeed);
     return () => clearInterval(timer);
-  }, [text, targetDuration]);
+  }, [cleanedText, targetDuration]);
 
   return (
     <div className={className}>
