@@ -1,18 +1,9 @@
 """
 Agent Core Module
-Agent 核心模块
+Agent模块
+包含增强版多Agent系统
 """
 
-from .stock_agent import StockAnalysisAgent, run_agent_loop
-from .multi_agent_system import MultiAgentTradingSystem, AgentRole, AnalysisResult
+from .multi_agent_system_enhanced import EnhancedMultiAgentSystem
 
-__all__ = [
-    'StockAnalysisAgent', 
-    'run_agent_loop',
-    'MultiAgentTradingSystem',
-    'AgentRole',
-    'AnalysisResult'
-]
-
-
-
+__all__ = ['EnhancedMultiAgentSystem']

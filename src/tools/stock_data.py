@@ -51,41 +51,53 @@ def get_stock_history(symbol: str) -> str:
     Example:
         >>> result = get_stock_history.invoke({"symbol": "600519"})
     """
-    # print(f"\n[工具调用] 正在从 AkShare 获取 {symbol} 的数据...")
+    import time
     
-    try:
-        # 设定开始时间为 1 个月前
-        start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y%m%d")
-        end_date = get_current_date()
+    # 重试机制
+    max_retries = 3
+    retry_delay = 1  # 初始延迟1秒
+    
+    for attempt in range(max_retries):
+        try:
+            # 设定开始时间为 1 个月前
+            start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y%m%d")
+            end_date = get_current_date()
 
-        # 调用 AkShare 接口：stock_zh_a_hist (A股日频率数据)
-        # period="daily" 日线
-        # adjust="qfq" 前复权 (分析价格趋势通常用前复权)
-        df = ak.stock_zh_a_hist(
-            symbol=symbol, 
-            period="daily", 
-            start_date=start_date, 
-            end_date=end_date, 
-            adjust="qfq"
-        )
-        
-        if df.empty:
-            return "未找到该股票数据，请确认代码是否正确。"
+            # 调用 AkShare 接口：stock_zh_a_hist (A股日频率数据)
+            # period="daily" 日线
+            # adjust="qfq" 前复权 (分析价格趋势通常用前复权)
+            df = ak.stock_zh_a_hist(
+                symbol=symbol, 
+                period="daily", 
+                start_date=start_date, 
+                end_date=end_date, 
+                adjust="qfq"
+            )
+            
+            if df.empty:
+                return f"未找到股票 {symbol} 的数据。\n\n可能原因:\n- 股票代码不正确\n- 该股票已退市\n- 数据源暂时不可用\n\n请确认股票代码格式为6位数字（如 600519）"
 
-        # 数据清洗
-        df = df[['日期', '开盘', '收盘', '最高', '最低', '成交量']]
-        
-        # 只取最近 10 天
-        recent_data = df.tail(10).copy()
-        
-        # 插入 id 列作为第一列
-        recent_data.insert(0, 'id', range(1, len(recent_data) + 1))
-        
-        # 转换为 Markdown
-        return recent_data.to_markdown(index=False)
+            # 数据清洗
+            df = df[['日期', '开盘', '收盘', '最高', '最低', '成交量']]
+            
+            # 只取最近 10 天
+            recent_data = df.tail(10).copy()
+            
+            # 插入 id 列作为第一列
+            recent_data.insert(0, 'id', range(1, len(recent_data) + 1))
+            
+            # 转换为 Markdown
+            return recent_data.to_markdown(index=False)
 
-    except Exception as e:
-        return f"获取数据失败: {str(e)}"
+        except Exception as e:
+            if attempt < max_retries - 1:
+                # 如果不是最后一次尝试，等待后重试
+                time.sleep(retry_delay)
+                retry_delay *= 2  # 指数退避
+                continue
+            else:
+                # 最后一次尝试失败，返回详细错误信息
+                return f"获取股票 {symbol} 数据失败（已重试{max_retries}次）\n\n错误信息: {str(e)}\n\n建议:\n- 检查网络连接\n- 确认股票代码格式正确（6位数字）\n- 稍后重试"
 
 
 @tool
@@ -103,28 +115,36 @@ def get_stock_news(symbol: str, max_news: int = 10) -> str:
     Example:
         >>> result = get_stock_news.invoke({"symbol": "600519", "max_news": 5})
     """
-    # print(f"\n[工具调用] 正在获取 {symbol} 的新闻资讯...")
+    import time
     
-    try:
-        # 使用 AkShare 获取个股新闻
-        df = ak.stock_news_em(symbol=symbol)
-        
-        if df.empty:
-            return "暂无该股票的新闻数据。"
-        
-        # 取最新的 max_news 条
-        recent_news = df.head(max_news).copy()
-        
-        # 格式化输出
-        news_list = []
-        for idx, row in recent_news.iterrows():
-            news_item = f"【{row.get('发布时间', 'N/A')}】{row.get('新闻标题', 'N/A')}\n来源: {row.get('新闻来源', 'N/A')}"
-            news_list.append(news_item)
-        
-        return "\n\n".join(news_list)
+    # 重试机制
+    max_retries = 2
     
-    except Exception as e:
-        return f"获取新闻失败: {str(e)}"
+    for attempt in range(max_retries):
+        try:
+            # 使用 AkShare 获取个股新闻
+            df = ak.stock_news_em(symbol=symbol)
+            
+            if df.empty:
+                return f"暂无股票 {symbol} 的新闻数据。\n\n可能原因:\n- 该股票近期没有相关新闻\n- 数据源暂时不可用\n- 股票代码可能不正确\n\n建议:\n- 访问东方财富网等财经网站查看新闻\n- 确认股票代码格式正确"
+            
+            # 取最新的 max_news 条
+            recent_news = df.head(max_news).copy()
+            
+            # 格式化输出
+            news_list = []
+            for idx, row in recent_news.iterrows():
+                news_item = f"【{row.get('发布时间', 'N/A')}】{row.get('新闻标题', 'N/A')}\n来源: {row.get('新闻来源', 'N/A')}"
+                news_list.append(news_item)
+            
+            return "\n\n".join(news_list)
+        
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            else:
+                return f"获取股票 {symbol} 新闻失败（已重试{max_retries}次）\n\n错误: {str(e)}\n\n建议:\n- 检查网络连接\n- 访问财经网站手动查看新闻\n- 稍后重试"
 
 
 @tool

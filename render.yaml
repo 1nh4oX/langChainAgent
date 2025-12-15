@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: langchain-agent-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "cd api && python main.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
+      - key: api-key
+        sync: false  # 需要在Render Dashboard手动设置
+      - key: base-url
+        value: https://api.siliconflow.cn/v1

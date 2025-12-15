@@ -86,7 +86,6 @@ cp .env.example .env
 
 #### 方式一：命令行版 (CLI)
 
-**增强版系统 (推荐):**
 ```bash
 source venv/bin/activate
 python app_multi_agent_enhanced.py
@@ -98,29 +97,21 @@ python app_multi_agent_enhanced.py --symbol 600519
 python app_multi_agent_enhanced.py --symbol 600519 --threshold 2.0 --max-rounds 3
 ```
 
-**经典版系统 (快速):**
-```bash
-python app_multi_agent.py
-```
-
-#### 方式二：Web界面 (Vercel)
+#### 方式二：Web界面
 
 **本地测试:**
 ```bash
-cd vercel_app/api
-source ../../venv/bin/activate
-python index.py
+# 启动后端
+cd api
+source ../venv/bin/activate
+python main.py
 ```
 
 然后访问: http://localhost:8000
 
-**部署到Vercel:**
-1. 推送代码到GitHub
-2. 在Vercel导入项目
-3. 设置Root Directory为 `vercel_app`
-4. 部署
-
-详见: [VERCEL_DEPLOYMENT.md](file:///Users/haoyin/.gemini/antigravity/brain/6f4e44d9-e910-42b0-862d-c121f1d16ebf/VERCEL_DEPLOYMENT.md)
+**部署到生产环境:**
+- 后端部署到Render: 参考 [RENDER_DEPLOY.md](RENDER_DEPLOY.md)
+- 前端部署到Vercel: 参考 [FRONTEND_VERCEL.md](FRONTEND_VERCEL.md)
 
 ---
 
@@ -212,29 +203,39 @@ print(f"仓位建议: {result.final_decision.position_suggestions}")
 
 ```
 langChainAgent/
+├── frontend/                           # React前端（部署到Vercel）
+│   ├── src/
+│   │   ├── App.jsx                    # 主应用组件
+│   │   ├── main.jsx                   # 入口文件
+│   │   └── index.css                  # 全局样式
+│   ├── public/                        # 静态资源
+│   ├── index.html                     # HTML模板
+│   └── vite.config.js                 # Vite配置
+│
+├── api/                                # FastAPI后端入口
+│   └── main.py                        # Render部署入口（4层11个Agent）
+│
 ├── src/
 │   ├── agent/
-│   │   ├── multi_agent_system_enhanced.py  🆕 增强版4层系统
-│   │   ├── agent_prompts_enhanced.py       🆕 11个Agent提示词
-│   │   ├── multi_agent_system.py           经典版5Agent系统
-│   │   └── agent_prompts.py                经典版提示词
+│   │   ├── multi_agent_system_enhanced.py  # 4层11个Agent系统实现
+│   │   └── agent_prompts_enhanced.py       # 增强版Agent提示词
 │   └── tools/
-│       ├── news_analysis_tools.py          🆕 新闻分析工具
-│       ├── sentiment_tools.py              🆕 情绪分析工具
-│       ├── fundamentals_tools.py           🆕 基本面分析工具
-│       └── stock_data.py                   技术分析工具
-├── vercel_app/                             🆕 Vercel部署版本
-│   ├── api/
-│   │   └── index.py                        FastAPI服务
-│   ├── public/
-│   │   ├── index.html                      现代化HTML界面
-│   │   ├── script.js                       前端逻辑
-│   │   └── style.css                       赛博朋克风格
-│   ├── requirements.txt
-│   └── vercel.json
-├── app_multi_agent_enhanced.py             🆕 增强版CLI入口
-├── app_multi_agent.py                      经典版CLI入口
-└── README.md
+│       ├── news_analysis_tools.py          # 新闻分析工具
+│       ├── sentiment_tools.py              # 情绪分析工具
+│       ├── fundamentals_tools.py           # 基本面分析工具
+│       └── stock_data.py                   # 技术分析工具
+│
+├── app_multi_agent_enhanced.py         # CLI测试入口
+├── render.yaml                         # Render一键部署配置
+├── vercel.json                         # Vercel部署配置
+├── requirements.txt                    # Python依赖
+├── .env.example                        # 环境变量示例
+│
+└── 文档/
+    ├── README.md                       # 项目说明
+    ├── RENDER_DEPLOY.md                # Render后端部署指南
+    ├── FRONTEND_VERCEL.md              # Vercel前端部署指南
+    └── LOCAL_TEST_GUIDE.md             # 本地测试指南
 
 ```
 

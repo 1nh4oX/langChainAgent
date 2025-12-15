@@ -126,44 +126,83 @@ def get_macroeconomic_indicators() -> str:
     try:
         result = "【中国宏观经济指标概览】\n\n"
         
-        # 由于网络限制，使用最新的宏观经济数据摘要
-        # 数据来源：国家统计局 2024年Q4数据
+        # 获取实时PMI数据
+        try:
+            pmi_df = ak.macro_china_pmi()
+            if not pmi_df.empty:
+                latest_pmi = pmi_df.iloc[-1]
+                result += "【PMI指数】\n"
+                result += f"  制造业PMI: {latest_pmi.get('制造业-指数', 'N/A')} ({latest_pmi.get('月份', 'N/A')})\n"
+                result += f"  非制造业PMI: {latest_pmi.get('非制造业-指数', 'N/A')}\n"
+                result += "  说明: PMI>50表示经济扩张\n\n"
+            else:
+                raise ValueError("PMI数据为空")
+        except Exception as e:
+            result += "【PMI指数】\n"
+            result += "  实时数据暂时不可用\n"
+            result += "  建议关注国家统计局官方发布\n\n"
         
-        result += "【PMI指数】\n"
-        result += "  制造业PMI: 50.3 (2024年12月)\n"
-        result += "  非制造业PMI: 52.2\n"
-        result += "  说明: PMI>50表示经济扩张，当前处于扩张区间\n\n"
+        # 获取实时CPI数据
+        try:
+            cpi_df = ak.macro_china_cpi_yearly()
+            if not cpi_df.empty:
+                latest_cpi = cpi_df.iloc[-1]
+                result += "【CPI指数】\n"
+                result += f"  居民消费价格指数: {latest_cpi.get('同比增长', 'N/A')}% ({latest_cpi.get('月份', 'N/A')})\n"
+                result += "  说明: 反映物价变动趋势\n\n"
+            else:
+                raise ValueError("CPI数据为空")
+        except Exception as e:
+            result += "【CPI指数】\n"
+            result += "  实时数据暂时不可用\n"
+            result += "  建议关注国家统计局官方发布\n\n"
         
-        result += "【CPI指数】\n"
-        result += "  居民消费价格指数: 0.2% (同比)\n"
-        result += "  核心CPI: 0.3%\n"
-        result += "  说明: 通胀压力较小，物价整体稳定\n\n"
+        # 获取实时GDP数据
+        try:
+            gdp_df = ak.macro_china_gdp_yearly()
+            if not gdp_df.empty:
+                latest_gdp = gdp_df.iloc[-1]
+                result += "【GDP数据】\n"
+                result += f"  GDP总量: {latest_gdp.get('国内生产总值-绝对值', 'N/A')}亿元\n"
+                result += f"  同比增长: {latest_gdp.get('国内生产总值-同比增长', 'N/A')}%\n"
+                result += f"  统计时间: {latest_gdp.get('季度', 'N/A')}\n\n"
+            else:
+                raise ValueError("GDP数据为空")
+        except Exception as e:
+            result += "【GDP数据】\n"
+            result += "  实时数据暂时不可用\n"
+            result += "  建议关注国家统计局官方发布\n\n"
         
-        result += "【GDP数据】\n"
-        result += "  GDP增速: 4.9% (2024年Q3)\n"
-        result += "  全年目标: 5%左右\n"
-        result += "  说明: 经济保持中高速增长\n\n"
-        
+        # 货币政策环境（部分数据需要手动更新或从其他来源获取）
         result += "【货币政策环境】\n"
-        result += "  LPR利率: 1年期3.1%，5年期3.6%\n"
-        result += "  存款准备金率: 中型银行约10%\n"
-        result += "  政策取向: 稳健偏宽松\n"
-        result += "  说明: 央行保持流动性合理充裕\n\n"
+        try:
+            # 尝试获取LPR利率
+            lpr_df = ak.rate_interbank()
+            if not lpr_df.empty:
+                latest_lpr = lpr_df.iloc[-1]
+                result += f"  市场利率: {latest_lpr.get('利率', 'N/A')}\n"
+        except:
+            pass
         
+        result += "  政策取向: 稳健的货币政策\n"
+        result += "  说明: 保持流动性合理充裕\n\n"
+        
+        # 市场环境评估
         result += "【市场环境评估】\n"
-        result += "  - 宏观经济: 复苏态势延续\n"
-        result += "  - 政策面: 积极财政+宽松货币\n"
-        result += "  - 流动性: 相对充裕\n"
-        result += "  - 外部环境: 需关注地缘政治风险\n\n"
+        result += "  - 宏观经济: 基于实时数据分析\n"
+        result += "  - 政策面: 积极的财政政策和稳健的货币政策\n"
+        result += "  - 流动性: 保持合理充裕\n"
+        result += "  - 外部环境: 需关注国际经济形势\n\n"
         
         result += "【投资建议】\n"
-        result += "当前宏观环境总体偏暖，政策支持力度较大。\n"
-        result += "建议关注受益于内需增长和政策扶持的行业。"
+        result += "基于最新宏观经济数据进行投资决策。\n"
+        result += "建议关注政策支持的行业和经济增长点。\n"
+        result += "注: 以上数据来自公开数据源，请以官方发布为准。"
         
         return result
         
     except Exception as e:
-        return f"宏观经济指标获取失败: {str(e)}\n注: 建议关注官方发布的最新经济数据"
+        return f"宏观经济指标获取失败: {str(e)}\n\n建议:\n- 检查网络连接\n- 关注国家统计局官方网站获取最新数据\n- 参考财经媒体的宏观经济报道"
 
 
 @tool
