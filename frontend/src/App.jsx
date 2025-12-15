@@ -35,39 +35,37 @@ const GlobalStyles = () => (
         border-radius: 3px;
       }
 
-      /* 动效关键帧 */
-      @keyframes slideUp {
-        from {
+      /* 核心优化：iOS 风格物理动效 
+         1. 加入 blur 滤镜，模拟高速运动的视觉残留
+         2. 使用 cubic-bezier(0.16, 1, 0.3, 1) 模拟磁力吸附感
+      */
+      @keyframes slideUpFade {
+        0% {
           opacity: 0;
-          transform: translateY(24px) scale(0.98);
+          transform: translateY(30px) scale(0.96);
+          filter: blur(10px);
         }
-        to {
+        100% {
           opacity: 1;
           transform: translateY(0) scale(1);
+          filter: blur(0px);
         }
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from { opacity: 0; filter: blur(5px); }
+        to { opacity: 1; filter: blur(0); }
       }
 
-      @keyframes pulse-ring {
-        0% {
-          transform: scale(0.8);
-          opacity: 0.5;
-          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-        }
-        70% {
-          transform: scale(1);
-          opacity: 1;
-          box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-        }
-        100% {
-          transform: scale(0.8);
-          opacity: 0.5;
-          box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-        }
+      /* 线条生长动画 */
+      @keyframes drawLine {
+        from { height: 0%; opacity: 0; }
+        to { height: 100%; opacity: 1; }
+      }
+
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(0.95); }
       }
 
       @keyframes blob {
@@ -77,25 +75,40 @@ const GlobalStyles = () => (
         100% { transform: translate(0px, 0px) scale(1); }
       }
 
+      /* 柔和呼吸光标 */
+      @keyframes blink-soft {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+
+      /* Apple-style Easing - 急加速、慢减速的曲线 */
       .animate-slideUp {
-        animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        animation: slideUpFade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
       .animate-fadeIn {
-        animation: fadeIn 0.6s ease-out forwards;
+        animation: fadeIn 0.8s ease-out forwards;
+      }
+
+      .animate-drawLine {
+        animation: drawLine 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
       .animate-blob {
         animation: blob 10s infinite;
       }
 
-      .animation-delay-2000 {
-        animation-delay: 2s;
+      .animate-blink {
+        animation: blink-soft 1s ease-in-out infinite;
       }
 
-      .animation-delay-4000 {
-        animation-delay: 4s;
-      }
+      .delay-100 { animation-delay: 100ms; }
+      .delay-200 { animation-delay: 200ms; }
+      .delay-300 { animation-delay: 300ms; }
+      .delay-500 { animation-delay: 500ms; }
+
+      .animation-delay-2000 { animation-delay: 2s; }
+      .animation-delay-4000 { animation-delay: 4s; }
 
       /* 玻璃拟态增强 */
       .glass-panel {
@@ -110,9 +123,7 @@ const GlobalStyles = () => (
       }
     `}
   </style>
-);
-
-// 简单的 Markdown 转 HTML 函数
+);// 简单的 Markdown 转 HTML 函数
 const simpleMarkdownToHtml = (text) => {
   if (!text) return '';
 
@@ -184,6 +195,59 @@ const TypewriterText = ({ text, targetDuration = 2500, className }) => {
 
 // --- UI Components ---
 
+// 标题打字机组件 - 包含随机回退和补全动画
+const TypewriterTitle = () => {
+  const [text, setText] = useState("");
+  const fullText = "Sentry";
+
+  useEffect(() => {
+    let timeout;
+
+    const animate = (currentStr, isDeleting, deleteTarget) => {
+      let typeSpeed = isDeleting ? 100 : 150;
+
+      // 1. 完成输入完整单词
+      if (!isDeleting && currentStr === fullText) {
+        typeSpeed = 2500;
+        timeout = setTimeout(() => {
+          const keepCount = Math.floor(Math.random() * (fullText.length - 2)) + 1;
+          animate(currentStr, true, keepCount);
+        }, typeSpeed);
+        return;
+      }
+
+      // 2. 完成删除任务
+      if (isDeleting && currentStr.length === deleteTarget) {
+        typeSpeed = 500;
+        timeout = setTimeout(() => {
+          animate(currentStr, false, 0);
+        }, typeSpeed);
+        return;
+      }
+
+      // 3. 执行打字或删除动作
+      timeout = setTimeout(() => {
+        const nextText = isDeleting
+          ? currentStr.slice(0, -1)
+          : fullText.substring(0, currentStr.length + 1);
+
+        setText(nextText);
+        animate(nextText, isDeleting, deleteTarget);
+      }, typeSpeed);
+    };
+
+    timeout = setTimeout(() => animate("", false, 0), 800);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  return (
+    <span className="text-gray-300">
+      {text}
+      <span className="inline-block w-[8px] md:w-[10px] h-[0.75em] bg-gray-300 ml-2 animate-blink rounded-[3px]" style={{ verticalAlign: '-0.05em' }}></span>
+    </span>
+  );
+};
+
 const Header = () => (
   <header className="sticky top-0 z-50 transition-all duration-300">
     <div className="absolute inset-0 bg-white/70 backdrop-blur-xl border-b border-gray-200/50"></div>
@@ -205,18 +269,21 @@ const Header = () => (
   </header>
 );
 
+// 流体时间轴连接器 - 线条像水流一样向下生长
 const TimelineConnector = ({ active }) => (
-  <div className="absolute left-[-29px] top-8 bottom-0 w-px bg-gray-100 flex flex-col items-center">
-    <div className={`w-1.5 h-full transition-all duration-1000 ${active
-      ? 'bg-gradient-to-b from-gray-200 to-transparent' : 'bg-transparent'}`} />
+  <div className="absolute left-[-29px] top-8 bottom-0 w-px bg-gray-100 flex flex-col items-center overflow-hidden">
+    {active && (
+      <div className="w-1.5 h-full bg-gradient-to-b from-gray-200 to-transparent animate-drawLine origin-top" />
+    )}
   </div>
 );
 
+// 使用 iOS 标准贝塞尔曲线的步骤指示器
 const StepIndicator = ({ active, completed, number }) => (
   <div className={`absolute left-[-42px] top-0 w-7 h-7 rounded-full flex items-center justify-center text-xs
-    font-bold border-[3px] z-10 transition-all duration-500 ${completed ? 'bg-black border-black text-white' :
+    font-bold border-[3px] z-10 transition-all duration-700 ${completed ? 'bg-black border-black text-white' :
       active ? 'bg-white border-black text-black scale-110 shadow-lg' : 'bg-white border-gray-200 text-gray-300'
-    }`}>
+    }`} style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
     {completed ? <CheckCircle2 size={12} /> : number}
   </div>
 );
@@ -491,15 +558,15 @@ export default function App() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
                 <Cpu size={14} /> AI-Powered Analysis
               </div>
-              <h1 className="text-7xl md:text-8xl font-bold tracking-tight text-gray-900 text-balance">
-                Market <span className="text-gray-300">Sentry</span>
+              <h1 className="text-7xl md:text-8xl font-bold tracking-tight text-gray-900">
+                Market <TypewriterTitle />
               </h1>
               <p className="text-gray-500 text-2xl font-normal max-w-2xl mx-auto leading-relaxed text-balance">
                 多智能体深度博弈系统，为您提供专业的投资洞察。
               </p>
             </div>
 
-            <div className="max-w-2xl mx-auto animate-slideUp" style={{ animationDelay: '100ms' }}>
+            <div className="max-w-2xl mx-auto">
               <div className={`glass-panel rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.04)] transition-all duration-500 overflow-hidden ${showSettings ? 'shadow-[0_30px_60px_rgba(0,0,0,0.08)]' : ''}`}>
 
                 <div className="p-3 flex items-center relative z-20">
@@ -649,7 +716,7 @@ export default function App() {
           <div className="space-y-12 relative animate-slideUp">
 
             {/* Stock Header */}
-            <div className="flex items-end justify-between pb-8 border-b border-gray-200/60 relative">
+            <div className="flex items-center justify-between pb-8 border-b border-gray-200/60 relative">
               <div className="flex items-center gap-6">
                 <button
                   onClick={resetAnalysis}
