@@ -424,6 +424,9 @@ async def analyze(request: AnalyzeRequest):
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting AI Stock Analysis API...")
-    print("📊 4-Layer Multi-Agent System (11 Agents)")
+    print("📊 4-Layer Multi-Agent System (11 Agents)") 
     print("📖 API Docs: http://localhost:8000/docs")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # Railway uses PORT environment variable
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

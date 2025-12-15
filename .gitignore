@@ -56,6 +56,8 @@ data/processed/*
 *.xls
 *.json
 !vercel.json
+!package.json
+!package-lock.json
 
 # Logs
 *.log

@@ -7,8 +7,10 @@ import {
   ArrowLeft, Sparkles, CheckCircle2
 } from 'lucide-react';
 
-// API 地址 - 部署后需要改为 Railway 后端地址
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/analyze';
+
+
+// 后端API地址 - 局域网部署（备用）
+const BACKEND_URL = 'http://172.24.168.239:8000';
 
 // --- Styles & Fonts ---
 const GlobalStyles = () => (
@@ -379,7 +381,7 @@ export default function App() {
     setError(null);
 
     try {
-      const response = await fetch(`${apiUrl}/api/analyze`, {
+      const response = await fetch(`${BACKEND_URL}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
