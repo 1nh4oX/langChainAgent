@@ -156,7 +156,7 @@ export default function App() {
 
   // LLM Settings State
   const [apiKey, setApiKey] = useState('');
-  const [apiUrl, setApiUrl] = useState('https://api.siliconflow.cn/v1');
+  const [apiUrl, setApiUrl] = useState('https://langchainagent-production.up.railway.app');
   const [model, setModel] = useState('Qwen/Qwen2.5-7B-Instruct');
   const [customModel, setCustomModel] = useState('');
   const [threshold, setThreshold] = useState(3.0);
