@@ -51,22 +51,83 @@ async def root():
 async def analysis_generator(request: AnalyzeRequest) -> AsyncGenerator[str, None]:
     """生成器，流式返回增强版分析进度"""
     
+    # 获取股票名称 - 使用新浪财经 API（更稳定，不受代理影响）
+    stock_name = ""
+    try:
+        import requests
+        
+        # 使用不信任环境代理的 Session
+        session = requests.Session()
+        session.trust_env = False  # 不读取环境变量中的代理设置
+        
+        # 根据股票代码确定市场前缀
+        if request.symbol.startswith('6'):
+            sina_symbol = f"sh{request.symbol}"  # 上海
+        else:
+            sina_symbol = f"sz{request.symbol}"  # 深圳
+        
+        # 使用新浪财经 API
+        url = f"https://hq.sinajs.cn/list={sina_symbol}"
+        headers = {
+            'Referer': 'https://finance.sina.com.cn',
+            'User-Agent': 'Mozilla/5.0'
+        }
+        
+        try:
+            resp = session.get(url, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                # 解析新浪返回格式: var hq_str_sh600519="贵州茅台,..."
+                content = resp.content.decode('gbk')  # 新浪使用 GBK 编码
+                if '="' in content:
+                    data_part = content.split('="')[1].split('",')[0]
+                    if ',' in data_part:
+                        stock_name = data_part.split(',')[0]
+        except:
+            pass
+        
+        session.close()
+        
+        # 如果还是获取不到，使用默认值
+        if not stock_name:
+            stock_name = f"股票 {request.symbol}"
+            
+    except Exception as e:
+        stock_name = f"股票 {request.symbol}"
+    
     yield json.dumps({
         "type": "status", 
         "message": "🚀 正在初始化增强版多Agent系统...", 
         "step": "init",
-        "layer": 0
+        "layer": 0,
+        "stock_name": stock_name
     }) + "\n"
     
     try:
+        # 检查 API Key
+        effective_api_key = request.api_key or os.getenv("api-key") or os.getenv("OPENAI_API_KEY")
+        effective_base_url = request.base_url or os.getenv("base-url") or "https://api.siliconflow.cn/v1"
+        
+        # 调试日志
+        print(f"[DEBUG] Symbol: {request.symbol}")
+        print(f"[DEBUG] Model: {request.model}")
+        print(f"[DEBUG] Base URL: {effective_base_url}")
+        print(f"[DEBUG] API Key provided: {'Yes' if effective_api_key else 'No'}")
+        
+        if not effective_api_key:
+            yield json.dumps({
+                "type": "error",
+                "message": "❌ 请在设置中输入 API Key！未设置 API Key 无法调用大模型。"
+            }) + "\n"
+            return
+        
         if request.api_key:
             os.environ["OPENAI_API_KEY"] = request.api_key
             os.environ["api-key"] = request.api_key
         
         system = EnhancedMultiAgentSystem(
             model=request.model,
-            api_key=request.api_key,
-            base_url=request.base_url,
+            api_key=effective_api_key,
+            base_url=effective_base_url,
             debate_threshold=request.debate_threshold,
             max_debate_rounds=request.max_rounds
         )
@@ -75,7 +136,8 @@ async def analysis_generator(request: AnalyzeRequest) -> AsyncGenerator[str, Non
             "type": "status",
             "message": "✅ 系统初始化完成",
             "step": "initialized",
-            "layer": 0
+            "layer": 0,
+            "stock_name": stock_name
         }) + "\n"
         
         # ========== Layer 1: Analyst Team ==========

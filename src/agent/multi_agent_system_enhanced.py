@@ -674,9 +674,12 @@ class EnhancedMultiAgentSystem:
         """从内容中提取评分"""
         import re
         patterns = [
-            r'评分[：:]\\s*(\\d+(?:\\.\\d+)?)\\s*/\\s*10',
-            r'(\\d+(?:\\.\\d+)?)\\s*/\\s*10\\s*分',
-            r'综合评分[：:]\\s*(\\d+(?:\\.\\d+)?)',
+            r'评分[：:]\s*(\d+(?:\.\d+)?)\s*/\s*10',
+            r'(\d+(?:\.\d+)?)\s*/\s*10\s*分',
+            r'综合评分[：:]\s*(\d+(?:\.\d+)?)',
+            r'评分[：:]\s*(\d+(?:\.\d+)?)',
+            r'(\d+(?:\.\d+)?)\s*分',
+            r'(?:得分|打分)[：:]\s*(\d+(?:\.\d+)?)',
         ]
         
         for pattern in patterns:
@@ -684,6 +687,9 @@ class EnhancedMultiAgentSystem:
             if match:
                 try:
                     score = float(match.group(1))
+                    # 如果分数大于10，可能是百分制，转换一下
+                    if score > 10:
+                        score = score / 10
                     return min(max(score, 0), 10)
                 except:
                     pass
