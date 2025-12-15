@@ -7,9 +7,6 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-// API 地址 - 部署后需要改为 Railway 后端地址
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/analyze';
-
 // 简单的 Markdown 转 HTML 函数
 const simpleMarkdownToHtml = (text) => {
   if (!text) return '';
@@ -191,7 +188,7 @@ export default function App() {
     setError(null);
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${apiUrl}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
