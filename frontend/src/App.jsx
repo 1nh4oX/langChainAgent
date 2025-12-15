@@ -7,6 +7,9 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+// 后端API地址 - Railway部署的后端
+const BACKEND_URL = 'https://langchainagent-production.up.railway.app';
+
 // 简单的 Markdown 转 HTML 函数
 const simpleMarkdownToHtml = (text) => {
   if (!text) return '';
@@ -156,7 +159,7 @@ export default function App() {
 
   // LLM Settings State
   const [apiKey, setApiKey] = useState('');
-  const [apiUrl, setApiUrl] = useState('https://langchainagent-production.up.railway.app');
+  const [apiUrl, setApiUrl] = useState('https://api.siliconflow.cn/v1');
   const [model, setModel] = useState('Qwen/Qwen2.5-7B-Instruct');
   const [customModel, setCustomModel] = useState('');
   const [threshold, setThreshold] = useState(3.0);
@@ -188,7 +191,7 @@ export default function App() {
     setError(null);
 
     try {
-      const response = await fetch(`${apiUrl}/api/analyze`, {
+      const response = await fetch(`${BACKEND_URL}/api/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
