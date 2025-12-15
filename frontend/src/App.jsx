@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Search, Settings, Activity, Briefcase,
   Newspaper, BarChart2, TrendingUp, TrendingDown,
@@ -127,20 +129,22 @@ const GlobalStyles = () => (
   </style>
 );
 
-// 简单的 Markdown 转 HTML 函数
-const simpleMarkdownToHtml = (text) => {
-  if (!text) return '';
-
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>')
-    .replace(/^### (.+)$/gm, '<h3 class="font-medium text-base mt-3 mb-1">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="font-semibold text-lg mt-4 mb-2">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-4 mb-2">$1</h1>')
-    .replace(/\n/g, '<br/>');
+// Markdown 自定义样式组件
+const markdownComponents = {
+  h1: ({ node, ...props }) => <h1 className="font-bold text-xl mt-4 mb-2 text-gray-900" {...props} />,
+  h2: ({ node, ...props }) => <h2 className="font-semibold text-lg mt-4 mb-2 text-gray-900" {...props} />,
+  h3: ({ node, ...props }) => <h3 className="font-medium text-base mt-3 mb-1 text-gray-900" {...props} />,
+  p: ({ node, ...props }) => <p className="mb-2 leading-relaxed" {...props} />,
+  strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
+  em: ({ node, ...props }) => <em className="italic" {...props} />,
+  ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+  ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+  li: ({ node, ...props }) => <li className="ml-2" {...props} />,
+  code: ({ node, inline, ...props }) =>
+    inline ?
+      <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono" {...props} /> :
+      <code className="block bg-gray-100 p-3 rounded-lg text-sm font-mono overflow-x-auto my-2" {...props} />,
+  blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-2" {...props} />,
 };
 
 // --- Custom Hooks ---
@@ -190,10 +194,14 @@ const TypewriterText = ({ text, targetDuration = 2500, className }) => {
   }, [text, targetDuration]);
 
   return (
-    <div
-      className={`whitespace-pre-line ${className}`}
-      dangerouslySetInnerHTML={{ __html: simpleMarkdownToHtml(displayedText) }}
-    />
+    <div className={className}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={markdownComponents}
+      >
+        {displayedText}
+      </ReactMarkdown>
+    </div>
   );
 };
 

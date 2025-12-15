@@ -24,6 +24,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://172.24.168.239:5173",  # 局域网前端地址
+        "http://172.24.168.239:3000",  # 局域网前端地址
         "https://*.vercel.app",
         "*"  # 开发时允许所有，生产环境应该限制
     ],
