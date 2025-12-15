@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* 全局字体大小调整 */
+html {
+    font-size: 18px;
+    /* 基础字体从16px增加到18px */
+}
+
+body {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* 内容区域字体 */
+.markdown-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+/* 分析卡片内容 */
+.analysis-card {
+    font-size: 1rem;
+}
