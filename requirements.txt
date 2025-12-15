@@ -16,5 +16,10 @@ tabulate
 # Optional: Excel support
 openpyxl
 
-# Web UI
+# Web API (for backend deployment)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+requests>=2.31.0
+
+# Web UI (optional, for local streamlit development)
 streamlit>=1.28.0
