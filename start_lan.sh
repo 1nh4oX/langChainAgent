@@ -38,13 +38,25 @@ fi
 # 启动后端
 echo "🔧 启动后端服务..."
 cd api
-python3 main.py &
+../venv/bin/python main.py &
 BACKEND_PID=$!
 echo "✅ 后端启动成功 (PID: $BACKEND_PID)"
 cd ..
 
 # 等待后端启动
 sleep 3
+
+# 生成前端配置文件
+echo "🔧 生成前端配置..."
+cat > frontend/public/config.js << EOF
+// 自动生成的配置文件 - 由 start_lan.sh 创建
+window.APP_CONFIG = {
+  BACKEND_URL: 'http://${LOCAL_IP}:8000',
+  GENERATED_AT: '$(date)',
+  LOCAL_IP: '${LOCAL_IP}'
+};
+EOF
+echo "✅ 配置文件已生成: http://$LOCAL_IP:8000"
 
 # 启动前端
 echo "🔧 启动前端服务..."

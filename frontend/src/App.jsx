@@ -11,8 +11,8 @@ import {
 
 
 
-// 后端API地址 - 局域网部署（备用）
-const BACKEND_URL = 'http://172.24.168.239:8000';
+// 后端API地址 - 从配置文件动态读取（由 start_lan.sh 生成）
+const BACKEND_URL = window.APP_CONFIG?.BACKEND_URL || 'http://localhost:8000';
 
 // --- Styles & Fonts ---
 const GlobalStyles = () => (
