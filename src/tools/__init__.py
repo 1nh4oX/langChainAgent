@@ -31,6 +31,13 @@ from .fundamentals_tools import (
     identify_red_flags
 )
 
+from .tool_registry import (
+    ToolRegistry,
+    tool_registry,
+    init_tool_registry,
+    get_tool_registry,
+)
+
 __all__ = [
     # Stock data tools (Technical Analyst)
     'get_stock_history',
@@ -52,6 +59,11 @@ __all__ = [
     'calculate_intrinsic_value',
     'get_performance_metrics',
     'identify_red_flags',
+    # Tool Registry
+    'ToolRegistry',
+    'tool_registry',
+    'init_tool_registry',
+    'get_tool_registry',
 ]
 
 
