@@ -808,16 +808,17 @@ class EnhancedMultiAgentSystem:
         return 5.0
     
     def _extract_recommendation(self, content: str) -> str:
-        """提取投资建议 - 增强版
+        """提取投资建议 - 平衡版
         
         使用多层次匹配策略:
         1. 优先匹配明确的决策语句
         2. 考虑否定词前缀
-        3. 基于关键词评分
+        3. 基于关键词评分（平衡评分）
         """
         import re
         
-        # 优先级1: 查找明确的综合建议语句
+        # 优先级1: 查找明确的综合建议语句（最可靠）
+        # 注意：使用原始字符串r''，\s表示空白字符
         explicit_patterns = [
             r'综合建议[：:]\s*(买入|持有|卖出|观望|规避)',
             r'最终.*?建议[：:]\s*(买入|持有|卖出|观望|规避)',
@@ -830,8 +831,10 @@ class EnhancedMultiAgentSystem:
             match = re.search(pattern, content)
             if match:
                 result = match.group(1)
-                if result in ['观望', '规避']:
+                if result == '观望':
                     return '持有'
+                if result == '规避':
+                    return '卖出'
                 return result
         
         # 优先级2: 考虑否定词 + 关键词评分
@@ -840,52 +843,62 @@ class EnhancedMultiAgentSystem:
         hold_score = 0
         
         # 否定前缀检测
-        negative_buy_patterns = ['不建议买入', '不宜买入', '避免买入', '暂不买入', '不要买入', '禁止买入']
+        negative_buy_patterns = ['不建议买入', '不宜买入', '避免买入', '暂不买入', '不要买入', '不建议立即买入']
         for pattern in negative_buy_patterns:
             if pattern in content:
-                sell_score += 3  # 否定买入 = 倾向卖出/持有
+                hold_score += 3  # 不买入 = 持有
         
-        negative_sell_patterns = ['不建议卖出', '不宜卖出', '避免卖出']
+        negative_sell_patterns = ['不建议卖出', '不宜卖出', '继续持有']
         for pattern in negative_sell_patterns:
             if pattern in content:
-                buy_score += 2
+                hold_score += 2
         
-        # 正向关键词评分
-        strong_buy_keywords = ['强烈买入', '强烈推荐买入', '重仓买入', '积极买入']
-        buy_keywords = ['建议买入', '可以买入', '逢低买入', '买入机会', '适合买入']
+        # 持有观望类关键词（优先级更高，因为图片显示内容包含这些）
+        strong_hold_keywords = ['持有观望', '采取观望', '观望策略', '采取持有', '建议观望', '观望为主']
+        for kw in strong_hold_keywords:
+            if kw in content:
+                hold_score += 5  # 强权重
+        
+        # 买入关键词
+        strong_buy_keywords = ['强烈买入', '强烈推荐买入', '重仓买入', '积极买入', '大胆买入']
+        buy_keywords = ['建议买入', '可以买入', '逢低买入', '买入机会', '适合买入', '值得买入', '推荐买入']
+        
+        # 卖出关键词
         strong_sell_keywords = ['强烈卖出', '立即卖出', '清仓', '全部卖出', '尽快离场']
-        sell_keywords = ['建议卖出', '减仓', '逢高卖出', '建议规避', '回避', '远离']
-        hold_keywords = ['持有', '观望', '等待', '暂时观望', '维持现状', '不动']
+        sell_keywords = ['建议卖出', '减仓', '逢高卖出', '建议规避', '回避风险']
+        
+        # 持有关键词（更精确）
+        hold_keywords = ['建议持有', '继续持有', '暂时观望', '等待时机', '维持现状', '观望等待']
         
         for kw in strong_buy_keywords:
             if kw in content:
-                buy_score += 3
+                buy_score += 4
         for kw in buy_keywords:
             if kw in content:
-                buy_score += 1
+                buy_score += 2
         for kw in strong_sell_keywords:
             if kw in content:
-                sell_score += 3
+                sell_score += 4
         for kw in sell_keywords:
             if kw in content:
-                sell_score += 1
+                sell_score += 2
         for kw in hold_keywords:
             if kw in content:
-                hold_score += 1
+                hold_score += 2
         
-        # 根据分数判断
+        # 根据分数判断（公平原则）
         max_score = max(buy_score, sell_score, hold_score)
         
         if max_score == 0:
-            return "持有"  # 默认持有（保守策略）
+            return "持有"  # 没有明确信号时默认持有
         
-        # 优先级: 卖出 > 持有 > 买入（保守原则）
-        if sell_score == max_score:
-            return "卖出"
-        elif hold_score == max_score:
-            return "持有"
-        elif buy_score == max_score:
+        # 公平判断：谁分高谁赢
+        if buy_score > sell_score and buy_score > hold_score:
             return "买入"
+        elif sell_score > buy_score and sell_score > hold_score:
+            return "卖出"
+        elif hold_score >= buy_score and hold_score >= sell_score:
+            return "持有"
         else:
             return "持有"
     

@@ -1,130 +1,130 @@
-# 🤖 AI多Agent股票分析系统
+# 🤖 AI Multi-Agent Stock Analysis System
 
-> 基于LangChain的智能股票分析系统，采用4层11个AI Agent协同工作，提供全方位投资分析
+> An AI-powered stock analysis system built on LangChain. Four layers and eleven agents collaborate to deliver end-to-end investment research.
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-Latest-green.svg)](https://python.langchain.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## ✨ 核心特性
+## ✨ Highlights
 
-- 🧠 **4层AI架构**: 分析师团队 → 研究员辩论 → 交易决策 → 风险管理
-- 🤖 **11个专业Agent**: 基本面、情绪、新闻、技术分析 + 多空辩论 + 风险评估
-- 🗣️ **智能辩论机制**: 多空双方自动辩论，分歧触发深度讨论
-- 📊 **实时流式输出**: 可视化分析过程，展示每个Agent的工作状态
-- 🎨 **现代化界面**: React前端 + FastAPI后端
+- 🧠 **Four-layer AI stack**: Analyst squad → Researcher debate → Trading decision → Risk oversight
+- 🤖 **11 specialized agents**: Fundamentals, sentiment, news, technicals + bull/bear debate + risk reviewers
+- 🗣️ **Autonomous debate**: Bulls and bears argue automatically; score gaps trigger deeper rounds
+- 📊 **Streaming output**: Visualize each agent’s live reasoning and status
+- 🎨 **Modern UI**: React front end + FastAPI back end
 
-## 🏗️ 系统架构
+## 🏗️ Architecture
 
 ```
-📊 Layer 1: 分析师团队 (并行分析)
-   ├─ 💼 基本面分析师 - 财务健康度、估值评估
-   ├─ 💭 情绪分析师 - 社交媒体、市场情绪
-   ├─ 📰 新闻分析师 - 新闻情感、宏观经济
-   └─ 📈 技术分析师 - MACD、RSI、均线系统
+📊 Layer 1: Analyst squad (parallel)
+   ├─ 💼 Fundamentals analyst – financial health, valuation
+   ├─ 💭 Sentiment analyst – social and market mood
+   ├─ 📰 News analyst – news tone, macro signals
+   └─ 📈 Technical analyst – MACD, RSI, moving averages
             ↓
-🗣️ Layer 2: 研究员团队 (辩论机制)
-   ├─ 📈 看涨研究员 - 多头论证
-   ├─ 📉 看跌研究员 - 空头论证
-   └─ ⚔️ 自动辩论 (评分差异≥阈值时触发)
+🗣️ Layer 2: Research team (debate)
+   ├─ 📈 Bull researcher – long thesis
+   ├─ 📉 Bear researcher – short thesis
+   └─ ⚔️ Auto-debate (fires when score delta ≥ threshold)
             ↓
-💼 Layer 3: 交易员 (决策制定)
-   └─ 🎯 交易决策 - 买入/持有/卖出 + 仓位建议
+💼 Layer 3: Trader (decisioning)
+   └─ 🎯 Trade decision – buy/hold/sell + sizing guidance
             ↓
-⚖️ Layer 4: 风险管理 (多视角评估)
-   ├─ 🔥 激进派评估
-   ├─ ⚖️ 中立派评估
-   ├─ 🛡️ 保守派评估
-   └─ 👔 投资组合经理 - 最终决策
+⚖️ Layer 4: Risk management (multi-lens)
+   ├─ 🔥 Aggressive review
+   ├─ ⚖️ Neutral review
+   ├─ 🛡️ Conservative review
+   └─ 👔 Portfolio manager – final call
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境准备
+### Environment
 
 ```bash
-# 1. 克隆项目
+# 1. Clone
 git clone https://github.com/yourusername/langChainAgent.git
 cd langChainAgent
 
-# 2. 创建虚拟环境并安装依赖
+# 2. Create venv and install deps
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. 配置API密钥
+# 3. Configure API keys
 cp .env.example .env
-# 编辑 .env 文件，添加你的 API Key
+# Edit .env and add your API key(s)
 ```
 
-### 启动方式
+### Run Options
 
-#### 方式一：局域网部署（推荐）
+#### Option 1: LAN deployment (recommended)
 
-使用一键启动脚本：
+One-click script:
 
 ```bash
 ./start_lan.sh
 ```
 
-脚本会自动：
-- ✅ 检测局域网IP
-- ✅ 启动后端服务 (端口8000)
-- ✅ 启动前端界面 (端口5173)
-- ✅ 显示访问地址
+The script will:
+- ✅ Detect your LAN IP
+- ✅ Start the back end (port 8000)
+- ✅ Start the front end (port 5173)
+- ✅ Print the access URL
 
-**局域网访问**: 同一WiFi下的设备访问 `http://你的IP:5173`
+**LAN access**: Devices on the same Wi-Fi open `http://<your-ip>:5173`
 
-📖 详细说明: [LAN_DEPLOY.md](LAN_DEPLOY.md)
+More details: [LAN_DEPLOY.md](LAN_DEPLOY.md)
 
-#### 方式二：本地开发测试
+#### Option 2: Local dev & test
 
-**启动后端**:
+**Back end**:
 ```bash
 cd api
 python3 main.py
-# 访问 http://localhost:8000/docs 查看API文档
+# Visit http://localhost:8000/docs for the API docs
 ```
 
-**启动前端**（新终端）:
+**Front end** (new terminal):
 ```bash
 cd frontend
-npm install  # 首次需要
+npm install  # first time only
 npm run dev
-# 访问 http://localhost:5173
+# Visit http://localhost:5173
 ```
 
-📖 详细说明: [LOCAL_TEST_GUIDE.md](LOCAL_TEST_GUIDE.md)
+More details: [LOCAL_TEST_GUIDE.md](LOCAL_TEST_GUIDE.md)
 
-#### 方式三：命令行版本
+#### Option 3: CLI mode
 
 ```bash
-# 交互式分析
+# Interactive mode
 python app_multi_agent_enhanced.py
 
-# 直接分析指定股票
+# Analyze a specific ticker
 python app_multi_agent_enhanced.py --symbol 600519
 
-# 自定义参数
+# Customize parameters
 python app_multi_agent_enhanced.py --symbol 600519 --threshold 2.0 --max-rounds 3
 ```
 
-## 📖 使用示例
+## 📖 Usage Examples
 
-### Web界面使用
+### Web UI
 
-1. 打开浏览器访问前端地址
-2. 输入6位股票代码 (如: 600519)
-3. 点击⚙️设置，配置API Key和模型
-4. 点击→按钮开始分析
-5. 实时查看4层Agent分析结果
+1. Open the front-end URL in your browser.
+2. Enter a 6-digit ticker (e.g., 600519).
+3. Open ⚙️ Settings to configure API key and model.
+4. Click the → button to start.
+5. Watch the four-layer agent results in real time.
 
-### API调用示例
+### API
 
 ```python
 from src.agent.multi_agent_system_enhanced import EnhancedMultiAgentSystem
 
-# 初始化系统
+# Initialize
 system = EnhancedMultiAgentSystem(
     model="Qwen/Qwen2.5-7B-Instruct",
     api_key="your_api_key",
@@ -132,92 +132,92 @@ system = EnhancedMultiAgentSystem(
     debate_threshold=3.0
 )
 
-# 运行分析
+# Run analysis
 result = system.run_analysis("600519", verbose=True)
 
-# 查看结果
-print(f"最终建议: {result.final_decision.recommendation}")
-print(f"信心水平: {result.final_decision.confidence}")
-print(f"仓位建议: {result.final_decision.position_suggestions}")
+# Inspect output
+print(f"Final recommendation: {result.final_decision.recommendation}")
+print(f"Confidence: {result.final_decision.confidence}")
+print(f"Position sizing: {result.final_decision.position_suggestions}")
 ```
 
-## 🛠️ 技术栈
+## 🛠️ Tech Stack
 
-| 技术 | 用途 |
-|------|------|
-| **LangChain** | AI Agent框架和工具编排 |
-| **React** | 前端界面 |
-| **FastAPI** | 后端API服务 |
-| **AkShare** | A股数据获取 |
-| **react-markdown** | Markdown渲染 |
+| Tech | Purpose |
+|------|---------|
+| **LangChain** | Agent framework and tool orchestration |
+| **React** | Front-end UI |
+| **FastAPI** | Back-end APIs |
+| **AkShare** | China A-share market data |
+| **react-markdown** | Markdown rendering |
 
-## 📂 项目结构
+## 📂 Project Layout
 
 ```
 langChainAgent/
-├── frontend/                    # React前端
-│   └── src/App.jsx             # 主应用
-├── api/                         # FastAPI后端
-│   └── main.py                 # API入口
+├── frontend/                    # React front end
+│   └── src/App.jsx             # App entry
+├── api/                         # FastAPI back end
+│   └── main.py                 # API entry
 ├── src/
-│   ├── agent/                  # 4层11个Agent系统
+│   ├── agent/                  # Four-layer, 11-agent system
 │   │   ├── multi_agent_system_enhanced.py
 │   │   └── agent_prompts_enhanced.py
-│   └── tools/                  # 数据分析工具
+│   └── tools/                  # Data and analysis helpers
 │       ├── stock_data.py
 │       ├── fundamentals_tools.py
 │       ├── sentiment_tools.py
 │       └── news_analysis_tools.py
-├── app_multi_agent_enhanced.py  # CLI入口
-├── start_lan.sh                 # 局域网一键启动
-├── requirements.txt             # Python依赖
+├── app_multi_agent_enhanced.py  # CLI entry
+├── start_lan.sh                 # One-click LAN start
+├── requirements.txt             # Python deps
 └── 文档/
-    ├── README.md               # 项目说明
-    ├── LOCAL_TEST_GUIDE.md     # 本地测试指南
-    └── LAN_DEPLOY.md           # 局域网部署指南
+    ├── README.md               # Project overview
+    ├── LOCAL_TEST_GUIDE.md     # Local testing guide
+    └── LAN_DEPLOY.md           # LAN deployment guide
 ```
 
-## ⚙️ 配置选项
+## ⚙️ Configuration
 
-### 命令行参数
+### CLI Arguments
 
 ```bash
---symbol    股票代码 (6位数字)
---threshold 辩论触发阈值 (默认: 3.0)
---max-rounds 最大辩论轮次 (默认: 2)
---no-verbose 静默模式
+--symbol       Stock ticker (6 digits)
+--threshold    Debate trigger threshold (default: 3.0)
+--max-rounds   Max debate rounds (default: 2)
+--no-verbose   Quiet mode
 ```
 
-### 环境变量
+### Environment Variables
 
 ```bash
-# .env 文件
+# .env
 api-key=your_api_key_here
 base-url=https://api.siliconflow.cn/v1
 ```
 
-## ⚠️ 免责声明
+## ⚠️ Disclaimer
 
-**本系统仅用于教育和研究目的，不构成任何投资建议。**
+**For education and research only. This is not investment advice.**
 
-- 📊 分析结果基于历史数据和AI模型推理
-- ⚡ 市场瞬息万变，过往表现不代表未来
-- 💰 股市有风险，投资需谨慎
-- 🎯 请独立思考，理性决策
+- 📊 Results rely on historical data and AI reasoning.
+- ⚡ Markets change quickly; past performance is not indicative of future results.
+- 💰 Investing carries risk; proceed with caution.
+- 🎯 Make independent, rational decisions.
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+Released under the MIT License – see [LICENSE](LICENSE).
 
-## 🙏 致谢
+## 🙏 Credits
 
-- [LangChain](https://github.com/langchain-ai/langchain) - Agent框架
-- [AkShare](https://github.com/akfamily/akshare) - 金融数据接口
-- [FastAPI](https://fastapi.tiangolo.com/) - Web框架
+- [LangChain](https://github.com/langchain-ai/langchain) – agent framework
+- [AkShare](https://github.com/akfamily/akshare) – financial data API
+- [FastAPI](https://fastapi.tiangolo.com/) – web framework
 
 ---
 
 <p align="center">
   <strong>Made with ❤️ using LangChain & Multi-Agent AI</strong><br>
-  如果这个项目对你有帮助，请给一个 ⭐ Star!
+  If this project helps you, please drop a ⭐
 </p>
