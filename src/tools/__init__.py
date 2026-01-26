@@ -31,6 +31,28 @@ from .fundamentals_tools import (
     identify_red_flags
 )
 
+from .tool_registry import (
+    ToolRegistry,
+    tool_registry,
+    init_tool_registry,
+    get_tool_registry,
+)
+
+from .risk_metrics import (
+    calculate_volatility,
+    calculate_beta,
+    calculate_max_drawdown,
+    calculate_sharpe_ratio,
+    calculate_var,
+)
+
+from .quant_scoring import (
+    calculate_multi_factor_score,
+    generate_quant_signals,
+    QuantScore,
+    MultiFactorModel,
+)
+
 __all__ = [
     # Stock data tools (Technical Analyst)
     'get_stock_history',
@@ -52,8 +74,20 @@ __all__ = [
     'calculate_intrinsic_value',
     'get_performance_metrics',
     'identify_red_flags',
+    # Tool Registry
+    'ToolRegistry',
+    'tool_registry',
+    'init_tool_registry',
+    'get_tool_registry',
+    # Risk Metrics (Quantitative Analyst)
+    'calculate_volatility',
+    'calculate_beta',
+    'calculate_max_drawdown',
+    'calculate_sharpe_ratio',
+    'calculate_var',
+    # Quantitative Scoring
+    'calculate_multi_factor_score',
+    'generate_quant_signals',
+    'QuantScore',
+    'MultiFactorModel',
 ]
-
-
-
-

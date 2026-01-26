@@ -18,16 +18,11 @@ from src.agent.multi_agent_system_enhanced import (
 
 app = FastAPI(title="AI Stock Analysis API", version="2.0.0")
 
-# 允许跨域 - 部署后需要限制为前端域名
+# 允许跨域 - 开发模式允许所有来源
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://*.vercel.app",
-        "*"  # 开发时允许所有，生产环境应该限制
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],  # 开发时允许所有,生产环境应该限制为具体域名
+    allow_credentials=False,  # 使用通配符时必须设为 False
     allow_methods=["*"],
     allow_headers=["*"],
 )

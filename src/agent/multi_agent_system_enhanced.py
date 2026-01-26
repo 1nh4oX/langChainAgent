@@ -512,10 +512,14 @@ class EnhancedMultiAgentSystem:
         debate_occurred = score_diff >= self.debate_threshold
         
         debate_rounds = []
-        if debate_occurred and verbose:
-            print(f"\n⚡ 评分差异 {score_diff:.1f} >= {self.debate_threshold}，触发辩论！")
-            # 简化版辩论（可以在这里调用更详细的辩论流程）
-            # TODO: 实现完整的辩论机制
+        if debate_occurred:
+            if verbose:
+                print(f"\n⚡ 评分差异 {score_diff:.1f} >= {self.debate_threshold}，触发辩论！")
+            
+            # 运行完整辩论机制
+            debate_rounds, bullish, bearish = self._run_debate(
+                bullish, bearish, context, verbose
+            )
         
         return ResearcherDebate(
             bullish=bullish,
@@ -524,6 +528,113 @@ class EnhancedMultiAgentSystem:
             debate_occurred=debate_occurred,
             debate_rounds=debate_rounds
         )
+    
+    def _run_debate(
+        self,
+        bullish: AgentOutput,
+        bearish: AgentOutput,
+        context: str,
+        verbose: bool
+    ) -> tuple:
+        """运行完整的辩论机制
+        
+        Args:
+            bullish: 多头研究员的初始观点
+            bearish: 空头研究员的初始观点
+            context: 分析师报告上下文
+            verbose: 是否打印详细信息
+            
+        Returns:
+            (debate_rounds, updated_bullish, updated_bearish)
+        """
+        debate_rounds = []
+        
+        for round_num in range(1, self.max_debate_rounds + 1):
+            if verbose:
+                print(f"\n--- 辩论第 {round_num} 轮 ---")
+            
+            # 多头反驳空头
+            if verbose:
+                print("[多头] 反驳中...")
+            bull_rebuttal_prompt = ChatPromptTemplate.from_messages([
+                ("system", """你是看涨研究员，请针对空头的观点进行反驳。
+保持理性和专业，用数据和事实说话。
+反驳后请重新给出你的评分(1-10分)。"""),
+                ("user", f"""原始分析报告:
+{context}
+
+空头观点:
+{bearish.content}
+
+请针对空头的主要论点进行反驳，强化你的看涨理由。
+格式:
+【反驳要点】
+1. ...
+2. ...
+
+【更新后评分】
+评分: X/10分
+信心水平: 高/中/低""")
+            ])
+            bull_response = (bull_rebuttal_prompt | self.llm).invoke({})
+            
+            # 空头反驳多头
+            if verbose:
+                print("[空头] 反驳中...")
+            bear_rebuttal_prompt = ChatPromptTemplate.from_messages([
+                ("system", """你是看跌研究员，请针对多头的观点进行反驳。
+保持理性和专业，用数据和事实说话。
+反驳后请重新给出你的评分(1-10分，分数越低越看跌)。"""),
+                ("user", f"""原始分析报告:
+{context}
+
+多头观点:
+{bullish.content}
+
+请针对多头的主要论点进行反驳，强化你的看跌理由。
+格式:
+【反驳要点】
+1. ...
+2. ...
+
+【更新后评分】
+评分: X/10分
+信心水平: 高/中/低""")
+            ])
+            bear_response = (bear_rebuttal_prompt | self.llm).invoke({})
+            
+            # 记录辩论轮次
+            debate_rounds.append({
+                "round": round_num,
+                "bullish_rebuttal": bull_response.content,
+                "bearish_rebuttal": bear_response.content,
+                "bullish_score": self._extract_score(bull_response.content),
+                "bearish_score": self._extract_score(bear_response.content)
+            })
+            
+            # 更新观点
+            bullish = AgentOutput(
+                role=AgentRole.BULLISH_RESEARCHER,
+                content=f"{bullish.content}\n\n【第{round_num}轮辩论补充】\n{bull_response.content}",
+                score=self._extract_score(bull_response.content)
+            )
+            bearish = AgentOutput(
+                role=AgentRole.BEARISH_RESEARCHER,
+                content=f"{bearish.content}\n\n【第{round_num}轮辩论补充】\n{bear_response.content}",
+                score=self._extract_score(bear_response.content)
+            )
+            
+            if verbose:
+                print(f"第{round_num}轮辩论完成: 多头评分 {bullish.score}/10, 空头评分 {bearish.score}/10")
+            
+            # 如果评分差异收敛，提前结束辩论
+            new_diff = abs(bullish.score - bearish.score)
+            if new_diff < self.debate_threshold * 0.5:
+                if verbose:
+                    print(f"评分差异收敛至 {new_diff:.1f}，提前结束辩论")
+                break
+        
+        return debate_rounds, bullish, bearish
     
     # ==================== Layer 3: Trader ====================
     
@@ -697,38 +808,209 @@ class EnhancedMultiAgentSystem:
         return 5.0
     
     def _extract_recommendation(self, content: str) -> str:
-        """提取投资建议"""
-        if "买入" in content:
+        """提取投资建议 - 平衡版
+        
+        使用多层次匹配策略:
+        1. 优先匹配明确的决策语句
+        2. 考虑否定词前缀
+        3. 基于关键词评分（平衡评分）
+        """
+        import re
+        
+        # 优先级1: 查找明确的综合建议语句（最可靠）
+        # 注意：使用原始字符串r''，\s表示空白字符
+        explicit_patterns = [
+            r'综合建议[：:]\s*(买入|持有|卖出|观望|规避)',
+            r'最终.*?建议[：:]\s*(买入|持有|卖出|观望|规避)',
+            r'交易决策[：:]\s*(买入|持有|卖出|观望|规避)',
+            r'决策[：:]\s*(买入|持有|卖出|观望|规避)',
+            r'投资建议[：:]\s*(买入|持有|卖出|观望|规避)',
+        ]
+        
+        for pattern in explicit_patterns:
+            match = re.search(pattern, content)
+            if match:
+                result = match.group(1)
+                if result == '观望':
+                    return '持有'
+                if result == '规避':
+                    return '卖出'
+                return result
+        
+        # 优先级2: 考虑否定词 + 关键词评分
+        buy_score = 0
+        sell_score = 0
+        hold_score = 0
+        
+        # 否定前缀检测
+        negative_buy_patterns = ['不建议买入', '不宜买入', '避免买入', '暂不买入', '不要买入', '不建议立即买入']
+        for pattern in negative_buy_patterns:
+            if pattern in content:
+                hold_score += 3  # 不买入 = 持有
+        
+        negative_sell_patterns = ['不建议卖出', '不宜卖出', '继续持有']
+        for pattern in negative_sell_patterns:
+            if pattern in content:
+                hold_score += 2
+        
+        # 持有观望类关键词（优先级更高，因为图片显示内容包含这些）
+        strong_hold_keywords = ['持有观望', '采取观望', '观望策略', '采取持有', '建议观望', '观望为主']
+        for kw in strong_hold_keywords:
+            if kw in content:
+                hold_score += 5  # 强权重
+        
+        # 买入关键词
+        strong_buy_keywords = ['强烈买入', '强烈推荐买入', '重仓买入', '积极买入', '大胆买入']
+        buy_keywords = ['建议买入', '可以买入', '逢低买入', '买入机会', '适合买入', '值得买入', '推荐买入']
+        
+        # 卖出关键词
+        strong_sell_keywords = ['强烈卖出', '立即卖出', '清仓', '全部卖出', '尽快离场']
+        sell_keywords = ['建议卖出', '减仓', '逢高卖出', '建议规避', '回避风险']
+        
+        # 持有关键词（更精确）
+        hold_keywords = ['建议持有', '继续持有', '暂时观望', '等待时机', '维持现状', '观望等待']
+        
+        for kw in strong_buy_keywords:
+            if kw in content:
+                buy_score += 4
+        for kw in buy_keywords:
+            if kw in content:
+                buy_score += 2
+        for kw in strong_sell_keywords:
+            if kw in content:
+                sell_score += 4
+        for kw in sell_keywords:
+            if kw in content:
+                sell_score += 2
+        for kw in hold_keywords:
+            if kw in content:
+                hold_score += 2
+        
+        # 根据分数判断（公平原则）
+        max_score = max(buy_score, sell_score, hold_score)
+        
+        if max_score == 0:
+            return "持有"  # 没有明确信号时默认持有
+        
+        # 公平判断：谁分高谁赢
+        if buy_score > sell_score and buy_score > hold_score:
             return "买入"
-        elif "卖出" in content:
+        elif sell_score > buy_score and sell_score > hold_score:
             return "卖出"
+        elif hold_score >= buy_score and hold_score >= sell_score:
+            return "持有"
         else:
             return "持有"
     
     def _extract_position(self, content: str) -> str:
-        """提取仓位建议"""
-        if "重仓" in content:
+        """提取仓位建议 - 增强版"""
+        import re
+        
+        # 明确的仓位建议匹配
+        patterns = [
+            r'建议仓位[：:]\s*(轻仓|半仓|重仓|空仓|观望)',
+            r'仓位建议[：:]\s*(轻仓|半仓|重仓|空仓|观望)',
+            r'(轻仓|半仓|重仓|空仓).*?(?:买入|持有)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, content)
+            if match:
+                pos = match.group(1)
+                if pos == '空仓' or pos == '观望':
+                    return '观望'
+                return pos
+        
+        # 百分比匹配
+        pct_match = re.search(r'(\d+)[-–]?(\d*)%.*?仓位', content)
+        if pct_match:
+            pct = int(pct_match.group(1))
+            if pct >= 70:
+                return "重仓"
+            elif pct >= 40:
+                return "半仓"
+            elif pct >= 10:
+                return "轻仓"
+            else:
+                return "观望"
+        
+        # 关键词判断
+        if "重仓" in content or "大仓位" in content:
             return "重仓"
-        elif "半仓" in content:
+        elif "半仓" in content or "中等仓位" in content:
             return "半仓"
-        else:
+        elif "轻仓" in content or "小仓位" in content or "试探" in content:
             return "轻仓"
+        elif "空仓" in content or "观望" in content or "规避" in content:
+            return "观望"
+        else:
+            return "轻仓"  # 默认轻仓（保守策略）
     
     def _extract_confidence(self, content: str) -> str:
-        """提取信心水平"""
-        if "高信心" in content or "信心水平: 高" in content:
-            return "高"
-        elif "低信心" in content or "信心水平: 低" in content:
-            return "低"
-        else:
-            return "中"
+        """提取信心水平 - 增强版"""
+        import re
+        
+        # 明确的信心水平匹配
+        patterns = [
+            r'信心水平[：:]\s*(高|中|低)',
+            r'信心[：:]\s*(高|中|低)',
+            r'把握[：:]\s*(高|中|低|大|小)',
+            r'确定性[：:]\s*(高|中|低)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, content)
+            if match:
+                level = match.group(1)
+                if level in ['大']:
+                    return '高'
+                elif level in ['小']:
+                    return '低'
+                return level
+        
+        # 关键词判断
+        high_confidence = ['高信心', '非常有把握', '确定性高', '高度确定', '强烈建议']
+        low_confidence = ['低信心', '把握不大', '确定性低', '不确定', '谨慎']
+        
+        for kw in high_confidence:
+            if kw in content:
+                return "高"
+        for kw in low_confidence:
+            if kw in content:
+                return "低"
+        
+        return "中"  # 默认中等信心
     
     def _extract_position_suggestions(self, content: str) -> Dict[str, str]:
-        """提取不同风险偏好的仓位建议"""
-        # 简化版：返回默认值
-        # TODO: 从LLM输出中解析
-        return {
-            "激进型": "50-70%",
-            "稳健型": "30-50%",
-            "保守型": "10-30%"
+        """提取不同风险偏好的仓位建议 - 增强版"""
+        import re
+        
+        result = {
+            "激进型": "30-50%",
+            "稳健型": "20-30%",
+            "保守型": "10-20%"
         }
+        
+        # 尝试从内容中提取具体百分比
+        patterns = {
+            "激进型": [r'激进[型派].*?[：:]\s*(\d+[-–]\d+%|\d+%)', r'激进.*?仓位.*?(\d+[-–]\d+%|\d+%)'],
+            "稳健型": [r'稳健[型派].*?[：:]\s*(\d+[-–]\d+%|\d+%)', r'稳健.*?仓位.*?(\d+[-–]\d+%|\d+%)'],
+            "保守型": [r'保守[型派].*?[：:]\s*(\d+[-–]\d+%|\d+%)', r'保守.*?仓位.*?(\d+[-–]\d+%|\d+%)'],
+        }
+        
+        for key, pattern_list in patterns.items():
+            for pattern in pattern_list:
+                match = re.search(pattern, content)
+                if match:
+                    result[key] = match.group(1).replace('–', '-')
+                    break
+        
+        # 如果内容中有明确的卖出/规避建议，调低仓位
+        if any(word in content for word in ['卖出', '规避', '远离', '不建议']):
+            result = {
+                "激进型": "0-10%",
+                "稳健型": "0%",
+                "保守型": "0%"
+            }
+        
+        return result
